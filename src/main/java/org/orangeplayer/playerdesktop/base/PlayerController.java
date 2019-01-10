@@ -7,6 +7,10 @@ import org.orangeplayer.playerdesktop.gui.PlayerForm;
 import javax.swing.*;
 import java.awt.*;
 import java.io.FileNotFoundException;
+import static org.orangeplayer.playerdesktop.main.SysUtil.getResizedIcon;
+import org.orangeplayer.playerdesktop.model.TMTracks;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON_PATH;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON_PATH;
 
 public class PlayerController extends Thread {
     private volatile Player player;
@@ -21,6 +25,10 @@ public class PlayerController extends Thread {
     private JLabel titleLabel;
     private JLabel albumLabel;
     private JLabel artistLabel;
+    
+    private JProgressBar barTrack;
+    
+    private JTable tblTracks;
 
     private PlayerForm form;
 
@@ -34,31 +42,43 @@ public class PlayerController extends Thread {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
         this.form = form;
-        /*playButton = form.getBtnPlay();
-        seekNextButton = form.getBtnNext();
-        seekPrevButton = form.getBtnPrev();
-        nextTrackButton = form.getBtnNextTrack();
-        prevTrackButton = form.getBtnPrevTrack();
+        configAll();
+    }
+
+    public PlayerController(PlayerForm form) {
+         try {
+            player = new Player();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        this.form = form;
+        configAll();
+    }
+    
+    private void configAll() {
+        playButton = form.getBtnPlay();
+        seekNextButton = form.getBtnSeekNext();
+        seekPrevButton = form.getBtnSeekPrev();
+        nextTrackButton = form.getBtnNext();
+        prevTrackButton = form.getBtnPrev();
 
         coverLabel = form.getLblCover();
         titleLabel = form.getLblTitle();
         albumLabel = form.getLblAlbum();
-        artistLabel = form.getLblArtists();*/
+        artistLabel = form.getLblArtist();
+        
+        barTrack = form.getBarProgress();
 
+        tblTracks = form.getTblTracks();
+        
         on = false;
         setName(getClass().getSimpleName()+" "+getId());
     }
-
-    private ImageIcon getResizedIcon(ImageIcon img) {
-        return new ImageIcon(img.getImage().getScaledInstance(256,
-                256, Image.SCALE_SMOOTH));
-    }
-
+    
     private void updatePlayerInfo() {
-        /*form.getBarTrack().setValue(0);
-        form.getBarTrack().setString("00:00");
+        barTrack.setValue(0);
+        barTrack.setString("00:00");
         current = player.getCurrent();
         if (current.hasCover())
             coverLabel.setIcon(getResizedIcon(new ImageIcon(current.getCoverData())));
@@ -71,7 +91,7 @@ public class PlayerController extends Thread {
         albumLabel.setText(album == null ? "No Album" : album);
         artistLabel.setText(artist == null ? "No Artist" : artist);
         form.getLblDuration().setText(current.getFormattedDuration());
-        form.getPanelPlayer().updateUI();*/
+        form.getPanelContent().updateUI();
     }
 
     public boolean isOn() {
@@ -97,21 +117,22 @@ public class PlayerController extends Thread {
         player.start();
         while (!player.isPlaying());
         updatePlayerInfo();
+        
+        ((TMTracks)tblTracks.getModel()).loadList();
+        tblTracks.updateUI();
+        
         long ti = System.currentTimeMillis();
 
-        //JProgressBar barTrack = form.getBarTrack();
-        //barTrack.setMaximum((int) current.getDuration());
-
-        //form.getBtnPlay().setIcon(new ImageIcon(PAUSE_ICON_PATH));
+        barTrack.setMaximum((int) current.getDuration());
+        playButton.setIcon(new ImageIcon(PAUSE_ICON_PATH));
 
         while (on) {
             try {
                 if (player.getCurrent() != current)
                     updatePlayerInfo();
-                //System.out.println("Current: "+(current == null ? null : current.getTitle()));
                 if (hasOneSecond(ti)) {
-                    //barTrack.setValue((int) current.getProgress());
-                    //barTrack.setString(current.getFormattedProgress());
+                    barTrack.setValue((int) current.getProgress());
+                    barTrack.setString(current.getFormattedProgress());
                     ti = System.currentTimeMillis();
                 }
                 Thread.sleep(50);

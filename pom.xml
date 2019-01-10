@@ -6,7 +6,7 @@
 
     <groupId>org.orangeplayer</groupId>
     <artifactId>playerdesktop</artifactId>
-    <version>0.1</version>
+    <version>0.2-Beta</version>
 
     <name>OrangePlayer Desktop</name>
 
@@ -91,12 +91,18 @@
         <dependency>
             <groupId>org.orangeplayer</groupId>
             <artifactId>muplayer</artifactId>
-            <version>LATEST</version>
+            <version>1.2-TEST</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>forms_rt</artifactId>
             <version>7.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org</groupId>
+            <artifactId>jaudiotagger</artifactId>
+            <version>2.0.3</version>
         </dependency>
     </dependencies>
 

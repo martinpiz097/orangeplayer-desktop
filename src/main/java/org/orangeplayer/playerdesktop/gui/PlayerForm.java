@@ -5,18 +5,41 @@
  */
 package org.orangeplayer.playerdesktop.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTable;
+import static javax.swing.SwingConstants.CENTER;
+import static javax.swing.SwingConstants.RIGHT;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
+import org.muplayer.audio.Player;
+import org.muplayer.audio.SeekOption;
 import org.orangeplayer.playerdesktop.base.PlayerController;
 import org.orangeplayer.playerdesktop.gui.components.MenuButton;
+import org.orangeplayer.playerdesktop.main.SysUtil;
+import org.orangeplayer.playerdesktop.model.TMTracks;
 import org.orangeplayer.playerdesktop.sys.Session;
 import org.orangeplayer.playerdesktop.sys.SessionKey;
 import org.orangeplayer.playerdesktop.sys.SysInfo;
@@ -32,16 +55,19 @@ public class PlayerForm extends javax.swing.JFrame {
     
     public PlayerForm() {
         initComponents();
+        lblCover.setIcon(SysUtil.getResizedIcon((ImageIcon) lblCover.getIcon()));
         
         Dimension displaySize = SysInfo.DISPLAY_SIZE;
         setSize((int)(displaySize.getWidth()/1.3), (int)(displaySize.getHeight()/1.3));
         //setMinimumSize(getSize());
-        setResizable(false);
+        //setResizable(false);
          musicChooser = new JFileChooser(new File("/home/"+System.getProperty("user.name")));
         configMusicChooser();
         setLocationRelativeTo(null);
-        //setMenuButtons();
-        //configExternalEvents();
+        setMenuButtons();
+        
+        controller = new PlayerController(this);
+        Session.getInstance().add(SessionKey.CONTROLLER, controller);
     }
     
      private void configMusicChooser() {
@@ -60,6 +86,20 @@ public class PlayerForm extends javax.swing.JFrame {
         musicChooser.setMultiSelectionEnabled(false);
         musicChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
+     
+     private void configButton(JButton btn) {
+        btn.setBorder(new LineBorder(Color.WHITE));
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(Color.BLACK);
+        btn.setFont(new Font("Sans Serif", Font.PLAIN, 24));
+        btn.setMargin(new Insets(0, 0, 0, 0));
+        btn.setAlignmentX(0);
+        btn.setAlignmentY(0);
+        btn.setHorizontalAlignment(CENTER);
+        btn.setVerticalAlignment(CENTER);
+        btn.setHorizontalTextPosition(RIGHT);
+        btn.setVerticalTextPosition(CENTER);
+    }
 
     private void setMenuButtons() {
         MenuButton btn = new MenuButton("Cargar Música", new ImageIcon(getClass()
@@ -69,28 +109,14 @@ public class PlayerForm extends javax.swing.JFrame {
             File selected = musicChooser.getSelectedFile();
 
             if (selected != null && selected.isDirectory()) {
-                controller = new PlayerController(this, selected.getPath());
+                controller.getPlayer().addMusic(selected);
                 controller.start();
-                Session.getInstance().add(SessionKey.CONTROLLER, controller);
-                //musicPanel.setController(controller);
                 musicChooser.setSelectedFile(null);
             }
         });
         panelMenu.add(btn);
-        panelMenu.validate();
+        panelMenu.updateUI();
     }
-
-//    private void configExternalEvents() {
-//        JButton btnShowMenu = panelContent.getPanelTrack().getBtnShowMenu();
-//        btnShowMenu.addActionListener(e -> {
-//            //panelMenu.setVisible(!panelMenu.isVisible())
-//            panelContent.setVisible(false);
-//                    setMenuButtons();
-//            panelMenu.updateUI();
-//            panelContent.setVisible();
-//        }
-//        );
-//    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -116,14 +142,14 @@ public class PlayerForm extends javax.swing.JFrame {
         volSlider = new javax.swing.JSlider();
         buttonsContainer = new javax.swing.JPanel();
         panelButtons = new javax.swing.JPanel();
-        btnSeekPrev = new javax.swing.JButton();
         btnPrev = new javax.swing.JButton();
+        btnSeekPrev = new javax.swing.JButton();
         btnPlay = new javax.swing.JButton();
         btnNext = new javax.swing.JButton();
         btnSeekNext = new javax.swing.JButton();
         panelListTracks = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tblTracks = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Orange Player");
@@ -134,17 +160,7 @@ public class PlayerForm extends javax.swing.JFrame {
         panelMenu.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         panelMenu.setForeground(java.awt.Color.black);
         panelMenu.setName(""); // NOI18N
-
-        javax.swing.GroupLayout panelMenuLayout = new javax.swing.GroupLayout(panelMenu);
-        panelMenu.setLayout(panelMenuLayout);
-        panelMenuLayout.setHorizontalGroup(
-            panelMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 208, Short.MAX_VALUE)
-        );
-        panelMenuLayout.setVerticalGroup(
-            panelMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+        panelMenu.setLayout(new java.awt.GridLayout(100, 1, 0, 5));
 
         panelContent.setBackground(java.awt.Color.white);
         panelContent.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -165,11 +181,12 @@ public class PlayerForm extends javax.swing.JFrame {
 
         panelTrackInfo.setBackground(java.awt.Color.white);
         panelTrackInfo.setForeground(java.awt.Color.black);
-        panelTrackInfo.setLayout(new java.awt.GridLayout(100, 1, 0, 5));
+        panelTrackInfo.setLayout(new java.awt.GridLayout(4, 1, 0, 5));
 
         lblTitle.setBackground(java.awt.Color.white);
         lblTitle.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
         lblTitle.setForeground(java.awt.Color.black);
+        lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblTitle.setText("[No Song]");
         lblTitle.setOpaque(true);
         panelTrackInfo.add(lblTitle);
@@ -177,6 +194,7 @@ public class PlayerForm extends javax.swing.JFrame {
         lblAlbum.setBackground(java.awt.Color.white);
         lblAlbum.setFont(new java.awt.Font("SansSerif", 1, 16)); // NOI18N
         lblAlbum.setForeground(java.awt.Color.black);
+        lblAlbum.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblAlbum.setText("[No Song]");
         lblAlbum.setOpaque(true);
         panelTrackInfo.add(lblAlbum);
@@ -184,6 +202,7 @@ public class PlayerForm extends javax.swing.JFrame {
         lblArtist.setBackground(java.awt.Color.white);
         lblArtist.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
         lblArtist.setForeground(java.awt.Color.black);
+        lblArtist.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblArtist.setText("[No Song]");
         lblArtist.setOpaque(true);
         panelTrackInfo.add(lblArtist);
@@ -191,6 +210,7 @@ public class PlayerForm extends javax.swing.JFrame {
         lblDuration.setBackground(java.awt.Color.white);
         lblDuration.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
         lblDuration.setForeground(java.awt.Color.black);
+        lblDuration.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblDuration.setText("[No Song]");
         lblDuration.setOpaque(true);
         panelTrackInfo.add(lblDuration);
@@ -203,6 +223,11 @@ public class PlayerForm extends javax.swing.JFrame {
         barProgress.setForeground(SysInfo.PRIMARY_COLOR);
         barProgress.setString("00:00");
         barProgress.setStringPainted(true);
+        barProgress.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                barProgressMouseClicked(evt);
+            }
+        });
 
         btnMute.setBackground(java.awt.Color.white);
         btnMute.setForeground(java.awt.Color.black);
@@ -212,6 +237,12 @@ public class PlayerForm extends javax.swing.JFrame {
         volSlider.setBackground(java.awt.Color.white);
         volSlider.setForeground(SysInfo.PRIMARY_COLOR
         );
+        volSlider.setValue(85);
+        volSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                volSliderStateChanged(evt);
+            }
+        });
 
         buttonsContainer.setBackground(java.awt.Color.white);
         buttonsContainer.setForeground(java.awt.Color.black);
@@ -222,29 +253,94 @@ public class PlayerForm extends javax.swing.JFrame {
         panelButtons.setToolTipText("");
         panelButtons.setLayout(new java.awt.GridLayout(1, 5, 10, 0));
 
-        btnSeekPrev.setBackground(java.awt.Color.white);
-        btnSeekPrev.setForeground(java.awt.Color.black);
-        btnSeekPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/trackPrev.png"))); // NOI18N
-        panelButtons.add(btnSeekPrev);
-
         btnPrev.setBackground(java.awt.Color.white);
         btnPrev.setForeground(java.awt.Color.black);
-        btnPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/seekPrev.png"))); // NOI18N
+        btnPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/trackPrev.png"))); // NOI18N
+        btnPrev.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnPrevMouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnPrevMouseEntered(evt);
+            }
+        });
+        btnPrev.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPrevActionPerformed(evt);
+            }
+        });
         panelButtons.add(btnPrev);
+
+        btnSeekPrev.setBackground(java.awt.Color.white);
+        btnSeekPrev.setForeground(java.awt.Color.black);
+        btnSeekPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/seekPrev.png"))); // NOI18N
+        btnSeekPrev.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnSeekPrevMouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnSeekPrevMouseEntered(evt);
+            }
+        });
+        btnSeekPrev.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSeekPrevActionPerformed(evt);
+            }
+        });
+        panelButtons.add(btnSeekPrev);
 
         btnPlay.setBackground(java.awt.Color.white);
         btnPlay.setForeground(java.awt.Color.black);
         btnPlay.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/play.png"))); // NOI18N
+        btnPlay.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnPlayMouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnPlayMouseEntered(evt);
+            }
+        });
+        btnPlay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPlayActionPerformed(evt);
+            }
+        });
         panelButtons.add(btnPlay);
 
         btnNext.setBackground(java.awt.Color.white);
         btnNext.setForeground(java.awt.Color.black);
         btnNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/seekNext.png"))); // NOI18N
+        btnNext.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnNextMouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnNextMouseEntered(evt);
+            }
+        });
+        btnNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+        });
         panelButtons.add(btnNext);
 
         btnSeekNext.setBackground(java.awt.Color.white);
         btnSeekNext.setForeground(java.awt.Color.black);
         btnSeekNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/trackNext.png"))); // NOI18N
+        btnSeekNext.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnSeekNextMouseExited(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btnSeekNextMouseEntered(evt);
+            }
+        });
+        btnSeekNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSeekNextActionPerformed(evt);
+            }
+        });
         panelButtons.add(btnSeekNext);
 
         javax.swing.GroupLayout buttonsContainerLayout = new javax.swing.GroupLayout(buttonsContainer);
@@ -253,7 +349,7 @@ public class PlayerForm extends javax.swing.JFrame {
             buttonsContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(buttonsContainerLayout.createSequentialGroup()
                 .addGap(50, 50, 50)
-                .addComponent(panelButtons, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(panelButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 554, Short.MAX_VALUE)
                 .addGap(50, 50, 50))
         );
         buttonsContainerLayout.setVerticalGroup(
@@ -275,7 +371,7 @@ public class PlayerForm extends javax.swing.JFrame {
                     .addGroup(trackContainerLayout.createSequentialGroup()
                         .addComponent(btnMute, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE))
+                        .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(lblCover, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panelTrackInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(barProgress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -284,11 +380,10 @@ public class PlayerForm extends javax.swing.JFrame {
         trackContainerLayout.setVerticalGroup(
             trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(trackContainerLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(panelTrackInfo, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(panelTrackInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lblCover)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(26, 26, 26)
                 .addComponent(barProgress, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -307,8 +402,7 @@ public class PlayerForm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(btnShowMenu, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(trackContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(19, 19, 19))
+                .addComponent(trackContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelContentLayout.setVerticalGroup(
             panelContentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -324,21 +418,17 @@ public class PlayerForm extends javax.swing.JFrame {
         panelListTracks.setForeground(java.awt.Color.black);
         panelListTracks.setLayout(new java.awt.BorderLayout());
 
-        jTable1.setBackground(java.awt.Color.white);
-        jTable1.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        jTable1.setForeground(java.awt.Color.black);
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null},
-                {null},
-                {null},
-                {null}
-            },
-            new String [] {
-                "Title 1"
+        tblTracks.setBackground(java.awt.Color.white);
+        tblTracks.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        tblTracks.setForeground(java.awt.Color.black);
+        tblTracks.setModel(new TMTracks());
+        tblTracks.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tblTracks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblTracksMouseClicked(evt);
             }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        });
+        jScrollPane1.setViewportView(tblTracks);
 
         panelListTracks.add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
@@ -347,14 +437,14 @@ public class PlayerForm extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(panelMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelMenu, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelContent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(491, 491, 491))
+                .addGap(486, 486, 486))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(946, 946, 946)
-                    .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, 479, Short.MAX_VALUE)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(994, Short.MAX_VALUE)
+                    .addComponent(panelListTracks, javax.swing.GroupLayout.PREFERRED_SIZE, 474, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap()))
         );
         layout.setVerticalGroup(
@@ -364,7 +454,7 @@ public class PlayerForm extends javax.swing.JFrame {
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addGap(1, 1, 1)
-                    .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)
+                    .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, 634, Short.MAX_VALUE)
                     .addGap(1, 1, 1)))
         );
 
@@ -374,6 +464,119 @@ public class PlayerForm extends javax.swing.JFrame {
     private void btnShowMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowMenuActionPerformed
         panelMenu.setVisible(!panelMenu.isVisible());
     }//GEN-LAST:event_btnShowMenuActionPerformed
+
+    private void btnPlayMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPlayMouseEntered
+        btnPlay.setBackground(SysInfo.PRIMARY_COLOR);
+    }//GEN-LAST:event_btnPlayMouseEntered
+
+    private void btnNextMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNextMouseEntered
+        btnNext.setBackground(SysInfo.PRIMARY_COLOR);                                    
+    }//GEN-LAST:event_btnNextMouseEntered
+
+    private void btnSeekNextMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekNextMouseEntered
+        btnSeekNext.setBackground(SysInfo.PRIMARY_COLOR);
+    }//GEN-LAST:event_btnSeekNextMouseEntered
+
+    private void btnPrevMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPrevMouseEntered
+        btnPrev.setBackground(SysInfo.PRIMARY_COLOR);
+    }//GEN-LAST:event_btnPrevMouseEntered
+
+    private void btnSeekPrevMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekPrevMouseEntered
+        btnSeekPrev.setBackground(SysInfo.PRIMARY_COLOR);
+    }//GEN-LAST:event_btnSeekPrevMouseEntered
+
+    private void btnPlayMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPlayMouseExited
+        btnPlay.setBackground(Color.WHITE);
+    }//GEN-LAST:event_btnPlayMouseExited
+
+    private void btnNextMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNextMouseExited
+        btnNext.setBackground(Color.WHITE);
+    }//GEN-LAST:event_btnNextMouseExited
+
+    private void btnSeekNextMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekNextMouseExited
+        btnSeekNext.setBackground(Color.WHITE);
+    }//GEN-LAST:event_btnSeekNextMouseExited
+
+    private void btnSeekPrevMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekPrevMouseExited
+        btnSeekPrev.setBackground(Color.WHITE);
+    }//GEN-LAST:event_btnSeekPrevMouseExited
+
+    private void btnPrevMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPrevMouseExited
+        btnPrev.setBackground(Color.WHITE);
+    }//GEN-LAST:event_btnPrevMouseExited
+
+    private void btnPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayActionPerformed
+        if (controller.isAlive()) {
+            Player player = controller.getPlayer();
+            if (player.isPlaying()) {
+                player.pause();
+                btnPlay.setIcon(new ImageIcon(SysInfo.PLAYER_ICON_PATH));
+            }
+            else {
+                player.resume();
+                btnPlay.setIcon(new ImageIcon(SysInfo.PAUSE_ICON_PATH));
+            }
+        }
+    }//GEN-LAST:event_btnPlayActionPerformed
+
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        if (controller.isAlive())
+            controller.getPlayer().playNext();
+    }//GEN-LAST:event_btnNextActionPerformed
+
+    private void btnSeekPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekPrevActionPerformed
+        if (controller.isAlive())
+            controller.getPlayer().playPrevious();
+    }//GEN-LAST:event_btnSeekPrevActionPerformed
+
+    private void btnSeekNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekNextActionPerformed
+        if (controller.isAlive())
+            controller.getPlayer().seekFolder(SeekOption.NEXT);
+    }//GEN-LAST:event_btnSeekNextActionPerformed
+
+    private void btnPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrevActionPerformed
+        if (controller.isAlive())
+            controller.getPlayer().seekFolder(SeekOption.PREV);
+    }//GEN-LAST:event_btnPrevActionPerformed
+
+    private void volSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volSliderStateChanged
+        if (controller.isAlive()) {
+            int vol = volSlider.getValue();
+            controller.getPlayer().setGain(vol);
+        }
+        
+    }//GEN-LAST:event_volSliderStateChanged
+
+    private void barProgressMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_barProgressMouseClicked
+        if (evt.getButton() == MouseEvent.BUTTON1) {
+            Player player = controller.getPlayer();
+            
+            Rectangle bounds = barProgress.getBounds();
+            int position = evt.getX();
+            double maxX = bounds.getMaxX();
+            double minX = bounds.getMinX();
+            int distance = (int) (maxX-minX);
+            long trackDuration = player.getCurrent().getDuration();
+            long goTo = (position*trackDuration) / distance;
+            try {
+                barProgress.setValue((int) goTo);
+                player.getCurrent().gotoSecond(goTo);
+                
+                
+            } catch (IOException | LineUnavailableException | UnsupportedAudioFileException ex) {
+                Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+    }//GEN-LAST:event_barProgressMouseClicked
+
+    private void tblTracksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTracksMouseClicked
+        if (evt.getButton() == MouseEvent.BUTTON1 && 
+                evt.getClickCount() == 2) {
+            int selectedRow = tblTracks.getSelectedRow();
+            controller.getPlayer().play(selectedRow);
+        }
+    }//GEN-LAST:event_tblTracksMouseClicked
 
     /**
      * @param args the command line arguments
@@ -411,7 +614,6 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JButton btnShowMenu;
     private javax.swing.JPanel buttonsContainer;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     private javax.swing.JLabel lblAlbum;
     private javax.swing.JLabel lblArtist;
     private javax.swing.JLabel lblCover;
@@ -422,7 +624,114 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JPanel panelListTracks;
     private javax.swing.JPanel panelMenu;
     private javax.swing.JPanel panelTrackInfo;
+    private javax.swing.JTable tblTracks;
     private javax.swing.JPanel trackContainer;
     private javax.swing.JSlider volSlider;
     // End of variables declaration//GEN-END:variables
+
+    public PlayerController getController() {
+        return controller;
+    }
+
+    public JFileChooser getMusicChooser() {
+        return musicChooser;
+    }
+
+    public JProgressBar getBarProgress() {
+        return barProgress;
+    }
+
+    public JButton getBtnMute() {
+        return btnMute;
+    }
+
+    public JButton getBtnNext() {
+        return btnNext;
+    }
+
+    public JButton getBtnPlay() {
+        return btnPlay;
+    }
+
+    public JButton getBtnPrev() {
+        return btnPrev;
+    }
+
+    public JButton getBtnSeekNext() {
+        return btnSeekNext;
+    }
+
+    public JButton getBtnSeekPrev() {
+        return btnSeekPrev;
+    }
+
+    public JButton getBtnShowMenu() {
+        return btnShowMenu;
+    }
+
+    public JPanel getButtonsContainer() {
+        return buttonsContainer;
+    }
+
+    public JScrollPane getjScrollPane1() {
+        return jScrollPane1;
+    }
+
+    public JTable getjTable1() {
+        return tblTracks;
+    }
+
+    public JLabel getLblAlbum() {
+        return lblAlbum;
+    }
+
+    public JLabel getLblArtist() {
+        return lblArtist;
+    }
+
+    public JLabel getLblCover() {
+        return lblCover;
+    }
+
+    public JLabel getLblDuration() {
+        return lblDuration;
+    }
+
+    public JLabel getLblTitle() {
+        return lblTitle;
+    }
+
+    public JPanel getPanelButtons() {
+        return panelButtons;
+    }
+
+    public JPanel getPanelContent() {
+        return panelContent;
+    }
+
+    public JPanel getPanelListTracks() {
+        return panelListTracks;
+    }
+
+    public JPanel getPanelMenu() {
+        return panelMenu;
+    }
+
+    public JPanel getPanelTrackInfo() {
+        return panelTrackInfo;
+    }
+
+    public JPanel getTrackContainer() {
+        return trackContainer;
+    }
+
+    public JSlider getVolSlider() {
+        return volSlider;
+    }
+
+    public JTable getTblTracks() {
+        return tblTracks;
+    }
+    
+    
 }
