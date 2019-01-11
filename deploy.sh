@@ -1,7 +1,7 @@
 #!/bin/bash
 mvn clean package
 rm OrangePlayer\ Desktop.jar
-mv targat/OrangePlayer\ Desktop.jar
+mv target/OrangePlayer\ Desktop.jar .
 rm -r target/
 git add .
 git commit -m "$1 $2 $3 $4"
