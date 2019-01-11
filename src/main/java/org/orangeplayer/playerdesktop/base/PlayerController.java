@@ -9,12 +9,16 @@ import java.awt.*;
 import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.table.TableColumnModel;
 import static org.orangeplayer.playerdesktop.sys.SysUtil.getResizedIcon;
 import org.orangeplayer.playerdesktop.model.TMTracks;
 import org.orangeplayer.playerdesktop.sys.Session;
 import org.orangeplayer.playerdesktop.sys.SessionKey;
 import static org.orangeplayer.playerdesktop.sys.SessionKey.DARK_MODE;
+import org.orangeplayer.playerdesktop.sys.SysInfo;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON_PATH;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_DARK_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON_PATH;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON_PATH;
 
@@ -83,13 +87,15 @@ public class PlayerController extends Thread {
     }
     
     private void updatePlayerInfo() {
+        boolean darkEnabled = (boolean) Session.getInstance().get(DARK_MODE);
+        
         barTrack.setValue(0);
         barTrack.setString("00:00");
         current = player.getCurrent();
         if (current.hasCover())
             coverLabel.setIcon(getResizedIcon(new ImageIcon(current.getCoverData())));
         else
-            coverLabel.setIcon(getResizedIcon(new ImageIcon(DEFAULT_COVER_ICON_PATH)));
+            coverLabel.setIcon(getResizedIcon(darkEnabled?DEFAULT_DARK_COVER_ICON:DEFAULT_COVER_ICON));
 
         titleLabel.setText(current.getTitle());
         String album = current.getAlbum();
@@ -119,6 +125,13 @@ public class PlayerController extends Thread {
         int seconds = (int) ((System.currentTimeMillis()-ti)/1000);
         return seconds>=1;
     }
+    
+    public void setColumnsLeghts(int[] valuesLenght) {
+        TableColumnModel columnModel = tblTracks.getColumnModel();
+        for (int i = 0; i < columnModel.getColumnCount(); i++)
+            columnModel.getColumn(i).setPreferredWidth(valuesLenght[i]*2+30);
+        tblTracks.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+    }
 
     @Override
     public void run() {
@@ -127,7 +140,10 @@ public class PlayerController extends Thread {
         while (!player.isPlaying());
         //new TTableUpdater(tblTracks).start();
         //Thread.sleep(500);
-        ((TMTracks) tblTracks.getModel()).loadList();
+        
+        TMTracks tblModel = (TMTracks) tblTracks.getModel();
+        tblModel.loadList();
+        setColumnsLeghts(tblModel.getMaxValuesLenghts());
         tblTracks.updateUI();
         updatePlayerInfo();
 

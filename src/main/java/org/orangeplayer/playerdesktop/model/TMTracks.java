@@ -27,6 +27,30 @@ public class TMTracks implements TableModel {
         loadList();
     }
     
+    public int[] getMaxValuesLenghts() {
+        int[] valuesLenghts = new int[getColumnCount()];
+        if (listTracks.isEmpty()) {
+            for (int i = 0; i < valuesLenghts.length; i++) 
+                valuesLenghts[i] = 50;
+        }
+        
+        else {
+            int max = 0;
+            int valueLenght;
+            for (int i = 0; i < valuesLenghts.length; i++) {
+                for (int j = 0; j < getRowCount(); j++) {
+                    valueLenght = getValueAt(j, i).toString().length();
+                    if (valueLenght > max)
+                        max = valueLenght;
+                }
+                valuesLenghts[i] = max;
+                max = 0;
+            }
+        }
+        return valuesLenghts;
+        
+    }
+    
     public void loadList() {
         Object controller = Session.getInstance().get(SessionKey.CONTROLLER);
         listTracks = controller == null ? new ArrayList<>() :

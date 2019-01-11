@@ -5,14 +5,9 @@
  */
 package org.orangeplayer.playerdesktop.gui;
 
-import java.awt.Color;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Insets;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -21,24 +16,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import static javax.swing.SwingConstants.CENTER;
-import static javax.swing.SwingConstants.RIGHT;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import javax.swing.table.JTableHeader;
 import org.muplayer.audio.Player;
 import org.muplayer.audio.SeekOption;
@@ -86,6 +76,7 @@ public class PlayerForm extends javax.swing.JFrame {
         header.setForeground(WHITE);
         
         controller = new PlayerController(this);
+        //controller.setColumnsLeghts(((TMTracks)tblTracks.getModel()).getMaxValuesLenghts());
         Session.getInstance().add(SessionKey.CONTROLLER, controller);
         Session.getInstance().add(SessionKey.DARK_MODE, false);
         
@@ -166,11 +157,12 @@ public class PlayerForm extends javax.swing.JFrame {
     }
     
     private void configSize() {
-        //Dimension displaySize = SysInfo.DISPLAY_SIZE;
-        Dimension preferredSize = getPreferredSize();
-        setSize(preferredSize);
-        //setMinimumSize(new Dimension((int) (preferredSize.getWidth()-100), preferredSize.height));
-        setMinimumSize(preferredSize);
+        Dimension displaySize = SysInfo.DISPLAY_SIZE;
+        //Dimension preferredSize = getPreferredSize();
+        Dimension newSize = new Dimension((int)(displaySize.getWidth()/1.5), (int)(displaySize.getHeight()/1.5));
+        setSize(newSize);
+        //setSize(preferredSize);
+        setMinimumSize(newSize);
     }
     
      private void configMusicChooser() {
@@ -198,8 +190,12 @@ public class PlayerForm extends javax.swing.JFrame {
             File selected = musicChooser.getSelectedFile();
 
             if (selected != null && selected.isDirectory()) {
-                controller.getPlayer().addMusic(selected);
-                controller.start();
+                Player player = controller.getPlayer();
+                player.addMusic(selected);
+                if (player.hasSounds())
+                    controller.start();
+                else
+                    JOptionPane.showMessageDialog(this, "No se ha encontrado música");
                 musicChooser.setSelectedFile(null);
             }
         });
@@ -228,7 +224,6 @@ public class PlayerForm extends javax.swing.JFrame {
         lblDuration = new javax.swing.JLabel();
         lblCover = new javax.swing.JLabel();
         barProgress = new javax.swing.JProgressBar();
-        btnMute = new javax.swing.JButton();
         volSlider = new javax.swing.JSlider();
         buttonsContainer = new javax.swing.JPanel();
         panelButtons = new javax.swing.JPanel();
@@ -237,6 +232,7 @@ public class PlayerForm extends javax.swing.JFrame {
         btnPlay = new javax.swing.JButton();
         btnNext = new javax.swing.JButton();
         btnSeekNext = new javax.swing.JButton();
+        btnMute = new javax.swing.JButton();
         panelListTracks = new javax.swing.JPanel();
         tableScroll = new javax.swing.JScrollPane();
         tblTracks = new javax.swing.JTable();
@@ -346,18 +342,6 @@ public class PlayerForm extends javax.swing.JFrame {
         barProgress.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 barProgressMouseClicked(evt);
-            }
-        });
-
-        btnMute.setBackground(java.awt.Color.white);
-        btnMute.setForeground(java.awt.Color.black);
-        btnMute.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/volume.png"))); // NOI18N
-        btnMute.setBorder(null);
-        btnMute.setBorderPainted(false);
-        btnMute.setFocusPainted(false);
-        btnMute.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnMuteActionPerformed(evt);
             }
         });
 
@@ -475,9 +459,9 @@ public class PlayerForm extends javax.swing.JFrame {
         buttonsContainerLayout.setHorizontalGroup(
             buttonsContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(buttonsContainerLayout.createSequentialGroup()
-                .addGap(70, 70, 70)
-                .addComponent(panelButtons, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(70, 70, 70))
+                .addGap(30, 30, 30)
+                .addComponent(panelButtons, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addGap(30, 30, 30))
         );
         buttonsContainerLayout.setVerticalGroup(
             buttonsContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -487,6 +471,17 @@ public class PlayerForm extends javax.swing.JFrame {
                 .addContainerGap(20, Short.MAX_VALUE))
         );
 
+        btnMute.setBackground(java.awt.Color.white);
+        btnMute.setForeground(java.awt.Color.black);
+        btnMute.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/volume.png"))); // NOI18N
+        btnMute.setBorderPainted(false);
+        btnMute.setFocusPainted(false);
+        btnMute.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMuteActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout trackContainerLayout = new javax.swing.GroupLayout(trackContainer);
         trackContainer.setLayout(trackContainerLayout);
         trackContainerLayout.setHorizontalGroup(
@@ -494,32 +489,32 @@ public class PlayerForm extends javax.swing.JFrame {
             .addGroup(trackContainerLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonsContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, trackContainerLayout.createSequentialGroup()
-                        .addComponent(btnMute, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(lblCover, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelTrackInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(barProgress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(barProgress, javax.swing.GroupLayout.PREFERRED_SIZE, 465, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(buttonsContainer, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, trackContainerLayout.createSequentialGroup()
+                            .addComponent(btnMute, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE))
+                        .addComponent(lblCover, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(panelTrackInfo, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         trackContainerLayout.setVerticalGroup(
             trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(trackContainerLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(panelTrackInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
+                .addComponent(panelTrackInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(lblCover)
                 .addGap(26, 26, 26)
                 .addComponent(barProgress, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(trackContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(btnMute, javax.swing.GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
-                    .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(buttonsContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                    .addComponent(volSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnMute, javax.swing.GroupLayout.DEFAULT_SIZE, 44, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonsContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout panelContentLayout = new javax.swing.GroupLayout(panelContent);
@@ -529,17 +524,20 @@ public class PlayerForm extends javax.swing.JFrame {
             .addGroup(panelContentLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnShowMenu)
-                .addGap(11, 11, 11)
-                .addComponent(trackContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(trackContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(56, Short.MAX_VALUE))
         );
         panelContentLayout.setVerticalGroup(
             panelContentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelContentLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelContentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnShowMenu)
-                    .addComponent(trackContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(10, 10, 10))
+                    .addGroup(panelContentLayout.createSequentialGroup()
+                        .addGap(10, 10, 10)
+                        .addComponent(trackContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnShowMenu))
+                .addContainerGap())
         );
 
         panelListTracks.setBackground(java.awt.Color.white);
@@ -553,6 +551,7 @@ public class PlayerForm extends javax.swing.JFrame {
         tblTracks.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
         tblTracks.setForeground(java.awt.Color.black);
         tblTracks.setModel(new TMTracks());
+        tblTracks.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
         tblTracks.setGridColor(java.awt.Color.white);
         tblTracks.setSelectionBackground(SysInfo.SECUNDARY_COLOR);
         tblTracks.setSelectionForeground(java.awt.Color.black);
@@ -592,25 +591,17 @@ public class PlayerForm extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(panelMenu, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
-                .addComponent(panelContent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(486, 486, 486))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(1002, Short.MAX_VALUE)
-                    .addComponent(panelListTracks, javax.swing.GroupLayout.PREFERRED_SIZE, 474, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap()))
+                .addComponent(panelMenu, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelContent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(panelMenu, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(panelContent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(1, 1, 1)
-                    .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, 698, Short.MAX_VALUE)
-                    .addGap(1, 1, 1)))
+            .addComponent(panelListTracks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
@@ -674,7 +665,7 @@ public class PlayerForm extends javax.swing.JFrame {
                 btnPlay.setIcon(new ImageIcon(darkEnabled?PLAYER_DARK_ICON_PATH:PLAYER_ICON_PATH));
             }
             else {
-                player.resume();
+                player.resumeTrack();
                 btnPlay.setIcon(new ImageIcon(darkEnabled?PAUSE_DARK_ICON_PATH:PAUSE_ICON_PATH));
             }
         }
@@ -699,14 +690,6 @@ public class PlayerForm extends javax.swing.JFrame {
         if (controller.isAlive())
             controller.getPlayer().seekFolder(SeekOption.PREV);
     }//GEN-LAST:event_btnPrevActionPerformed
-
-    private void volSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volSliderStateChanged
-        if (controller.isAlive()) {
-            int vol = volSlider.getValue();
-            controller.getPlayer().setGain(vol);
-        }
-        
-    }//GEN-LAST:event_volSliderStateChanged
 
     private void barProgressMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_barProgressMouseClicked
         if (evt.getButton() == MouseEvent.BUTTON1) {
@@ -741,25 +724,6 @@ public class PlayerForm extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tblTracksMouseClicked
 
-    private void btnMuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuteActionPerformed
-        if (controller.isAlive()) {
-            Player player = controller.getPlayer();
-            if (player.isMute()) {
-                player.unmute();
-                volSlider.setValue((int) Session.getInstance().get(SessionKey.GAIN));
-                Session.getInstance().remove(SessionKey.GAIN);
-                btnMute.setIcon(new ImageIcon("/icons/volume.png"));
-            }
-            else {
-                btnMute.setIcon(new ImageIcon("/icons/mute.png"));
-                Session.getInstance().add(SessionKey.GAIN, (int)player.getGain());
-                player.mute();
-                volSlider.setValue(0);
-            }
-            btnMute.validate();
-        }
-    }//GEN-LAST:event_btnMuteActionPerformed
-
     private void lblCoverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCoverMouseClicked
         hideMenu();
     }//GEN-LAST:event_lblCoverMouseClicked
@@ -787,6 +751,34 @@ public class PlayerForm extends javax.swing.JFrame {
     private void itemDarkModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemDarkModeActionPerformed
         setDarkMode(itemDarkMode.isSelected());
     }//GEN-LAST:event_itemDarkModeActionPerformed
+
+    private void volSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volSliderStateChanged
+        if (controller.isAlive()) {
+            int vol = volSlider.getValue();
+            controller.getPlayer().setGain(vol);
+        }
+    }//GEN-LAST:event_volSliderStateChanged
+
+    private void btnMuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuteActionPerformed
+         if (controller.isAlive()) {
+            boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
+            String iconPath = dark ? "/icons/dark/" : "/icons/";
+            
+            Player player = controller.getPlayer();
+            if (player.isMute()) {
+                player.unmute();
+                volSlider.setValue((int) Session.getInstance().get(SessionKey.GAIN));
+                Session.getInstance().remove(SessionKey.GAIN);
+                btnMute.setIcon(new ImageIcon(getClass().getResource(iconPath+"volume.png")));
+            }
+            else {
+                btnMute.setIcon(new ImageIcon(getClass().getResource(iconPath+"mute.png")));
+                Session.getInstance().add(SessionKey.GAIN, (int)player.getGain());
+                player.mute();
+                volSlider.setValue(0);
+            }
+        }
+    }//GEN-LAST:event_btnMuteActionPerformed
 
     /**
      * @param args the command line arguments
