@@ -10,6 +10,20 @@
 
     <name>OrangePlayer Desktop</name>
 
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Martín Pizarr Ascui</name>
+            <email>martinpiz097@gmail.com</email>
+        </developer>
+    </developers>
+
     <build>
         <plugins>
             <plugin>
