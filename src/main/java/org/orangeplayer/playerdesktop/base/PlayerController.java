@@ -7,9 +7,15 @@ import org.orangeplayer.playerdesktop.gui.PlayerForm;
 import javax.swing.*;
 import java.awt.*;
 import java.io.FileNotFoundException;
-import static org.orangeplayer.playerdesktop.main.SysUtil.getResizedIcon;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import static org.orangeplayer.playerdesktop.sys.SysUtil.getResizedIcon;
 import org.orangeplayer.playerdesktop.model.TMTracks;
+import org.orangeplayer.playerdesktop.sys.Session;
+import org.orangeplayer.playerdesktop.sys.SessionKey;
+import static org.orangeplayer.playerdesktop.sys.SessionKey.DARK_MODE;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON_PATH;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON_PATH;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON_PATH;
 
 public class PlayerController extends Thread {
@@ -92,6 +98,9 @@ public class PlayerController extends Thread {
         artistLabel.setText(artist == null ? "No Artist" : artist);
         form.getLblDuration().setText(current.getFormattedDuration());
         form.getPanelContent().updateUI();
+        int indexOf = player.getListSoundPaths().indexOf(player.getCurrent().getDataSource().getPath());
+        tblTracks.getSelectionModel().setSelectionInterval(0, indexOf);
+        
     }
 
     public boolean isOn() {
@@ -102,7 +111,7 @@ public class PlayerController extends Thread {
         on = false;
     }
 
-    public Player getPlayer() {
+    public synchronized Player getPlayer() {
         return player;
     }
 
@@ -113,18 +122,20 @@ public class PlayerController extends Thread {
 
     @Override
     public void run() {
-        on = true;
+          on = true;
         player.start();
         while (!player.isPlaying());
-        updatePlayerInfo();
-        
-        ((TMTracks)tblTracks.getModel()).loadList();
+        //new TTableUpdater(tblTracks).start();
+        //Thread.sleep(500);
+        ((TMTracks) tblTracks.getModel()).loadList();
         tblTracks.updateUI();
-        
+        updatePlayerInfo();
+
         long ti = System.currentTimeMillis();
 
         barTrack.setMaximum((int) current.getDuration());
-        playButton.setIcon(new ImageIcon(PAUSE_ICON_PATH));
+        playButton.setIcon(new ImageIcon(((boolean)Session.getInstance().get(DARK_MODE))?
+                PAUSE_DARK_ICON_PATH:PAUSE_ICON_PATH));
 
         while (on) {
             try {

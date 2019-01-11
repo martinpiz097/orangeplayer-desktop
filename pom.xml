@@ -6,7 +6,7 @@
 
     <groupId>org.orangeplayer</groupId>
     <artifactId>playerdesktop</artifactId>
-    <version>0.2-Beta</version>
+    <version>0.3-Beta</version>
 
     <name>OrangePlayer Desktop</name>
 
@@ -27,7 +27,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.orangeplayer.playerdesktop.main.Main</mainClass>
+                            <mainClass>org.orangeplayer.playerdesktop.gui.PlayerForm</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

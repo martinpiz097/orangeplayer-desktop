@@ -39,7 +39,7 @@ public class MenuButton extends JButton {
         setBorder(new LineBorder(Color.WHITE));
         setBackground(Color.WHITE);
         setForeground(Color.BLACK);
-        setFont(new Font("Sans Serif", Font.PLAIN, 24));
+        setFont(new Font("Sans Serif", Font.BOLD, 14));
         setMargin(new Insets(0, 0, 0, 0));
         setAlignmentX(0);
         setAlignmentY(0);
