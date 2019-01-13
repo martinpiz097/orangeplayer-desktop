@@ -9,7 +9,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Insets;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import static javax.swing.SwingConstants.CENTER;
 import static javax.swing.SwingConstants.RIGHT;
 import javax.swing.border.LineBorder;
@@ -35,7 +37,7 @@ public class MenuButton extends JButton {
         configButton();
     }
     
-     private void configButton() {
+    private void configButton() {
         setBorder(new LineBorder(Color.WHITE));
         setBackground(Color.WHITE);
         setForeground(Color.BLACK);

@@ -6,6 +6,7 @@
 package org.orangeplayer.playerdesktop.sys;
 
 import java.awt.Image;
+import java.net.URL;
 import javax.swing.ImageIcon;
 
 /**
@@ -21,4 +22,13 @@ public class SysUtil {
         return new ImageIcon(img.getImage().getScaledInstance(width,
                 height, Image.SCALE_SMOOTH));
     }
+    
+    public static URL getResource(String path) {
+        return SysUtil.class.getResource(path);
+    }
+    
+    public static ImageIcon getImage(String path) {
+        return new ImageIcon(getResource(path));
+    }
+    
 }

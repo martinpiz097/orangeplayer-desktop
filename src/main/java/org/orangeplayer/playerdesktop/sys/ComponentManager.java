@@ -6,11 +6,7 @@
 package org.orangeplayer.playerdesktop.sys;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.util.LinkedList;
-import java.util.function.Predicate;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 
 /**

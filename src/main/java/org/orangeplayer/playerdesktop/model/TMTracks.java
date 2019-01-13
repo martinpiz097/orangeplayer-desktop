@@ -13,7 +13,6 @@ import org.orangeplayer.playerdesktop.base.PlayerController;
 import org.orangeplayer.playerdesktop.sys.Session;
 import org.orangeplayer.playerdesktop.sys.SessionKey;
 import org.jaudiotagger.tag.FieldKey;
-import org.muplayer.audio.Track;
 
 /**
  *
@@ -53,7 +52,7 @@ public class TMTracks implements TableModel {
     
     public void loadList() {
         Object controller = Session.getInstance().get(SessionKey.CONTROLLER);
-        listTracks = controller == null ? new ArrayList<>() :
+            listTracks = controller == null ? new ArrayList<>() :
                 ((PlayerController)controller).getPlayer().getTrackTags();
     }
     

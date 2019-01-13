@@ -18,3 +18,15 @@
     - Se reduce tamaño de la ventana para adaptar a todo monitor
     - Se cambia el color del icono cover por defecto para el modo nocturno
     - Se valida la funcion de añadir musica, cuando no se encuentra se lanza mensaje
+
+# 0.5-Beta
+    - Se implementa multiseleccion al agregar musica
+    - Cuando existe musica en la lista y se desea añadir mas, esta se agrega a la lista
+    - Se reduce interfaz adaptandola a pantallas de menor resolucion
+    - Se reduce el tamaño de los iconos
+    - El volumen se ajusta con un movimiento deslizador
+    - Se define icono de aplicacion
+    - Se crea clase R para manejar las rutas de los iconos y los objetos relacionados a los colores
+    - Se agrega opcion de limpiar todo en el menu
+
+    

@@ -6,9 +6,12 @@ import org.orangeplayer.playerdesktop.gui.PlayerForm;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.table.TableColumnModel;
 import static org.orangeplayer.playerdesktop.sys.SysUtil.getResizedIcon;
 import org.orangeplayer.playerdesktop.model.TMTracks;
@@ -17,10 +20,9 @@ import org.orangeplayer.playerdesktop.sys.SessionKey;
 import static org.orangeplayer.playerdesktop.sys.SessionKey.DARK_MODE;
 import org.orangeplayer.playerdesktop.sys.SysInfo;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON_PATH;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_DARK_COVER_ICON;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON_PATH;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON_PATH;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON;
 
 public class PlayerController extends Thread {
     private volatile Player player;
@@ -92,21 +94,21 @@ public class PlayerController extends Thread {
         barTrack.setValue(0);
         barTrack.setString("00:00");
         current = player.getCurrent();
-        if (current.hasCover())
+        if (current.hasCover()) {
             coverLabel.setIcon(getResizedIcon(new ImageIcon(current.getCoverData())));
+        }
         else
             coverLabel.setIcon(getResizedIcon(darkEnabled?DEFAULT_DARK_COVER_ICON:DEFAULT_COVER_ICON));
 
         titleLabel.setText(current.getTitle());
         String album = current.getAlbum();
         String artist = current.getArtist();
-        albumLabel.setText(album == null ? "No Album" : album);
-        artistLabel.setText(artist == null ? "No Artist" : artist);
+        albumLabel.setText(album == null ? "Álbum Desconocido" : album);
+        artistLabel.setText(artist == null ? "Artista Desconocido" : artist);
         form.getLblDuration().setText(current.getFormattedDuration());
         form.getPanelContent().updateUI();
         int indexOf = player.getListSoundPaths().indexOf(player.getCurrent().getDataSource().getPath());
         tblTracks.getSelectionModel().setSelectionInterval(0, indexOf);
-        
     }
 
     public boolean isOn() {
@@ -150,8 +152,8 @@ public class PlayerController extends Thread {
         long ti = System.currentTimeMillis();
 
         barTrack.setMaximum((int) current.getDuration());
-        playButton.setIcon(new ImageIcon(((boolean)Session.getInstance().get(DARK_MODE))?
-                PAUSE_DARK_ICON_PATH:PAUSE_ICON_PATH));
+        playButton.setIcon(((boolean)Session.getInstance().get(DARK_MODE))?
+                PAUSE_DARK_ICON:PAUSE_ICON);
 
         while (on) {
             try {
@@ -167,5 +169,6 @@ public class PlayerController extends Thread {
                 e.printStackTrace();
             }
         }
+        player.shutdown();
     }
 }
