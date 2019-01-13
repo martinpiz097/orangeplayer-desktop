@@ -5,9 +5,11 @@
  */
 package org.orangeplayer.playerdesktop.sys;
 
+import java.awt.FontMetrics;
 import java.awt.Image;
 import java.net.URL;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 
 /**
  *
@@ -29,6 +31,18 @@ public class SysUtil {
     
     public static ImageIcon getImage(String path) {
         return new ImageIcon(getResource(path));
+    }
+    
+    public static String trimToLabel(String text, JLabel lbl) {
+        final FontMetrics metrics = lbl.getFontMetrics(lbl.getFont());
+        final int maxWidth = lbl.getWidth();
+        final char[] textChars = text.toCharArray();
+        
+        int decCounter = textChars.length;
+        
+        while (metrics.charsWidth(textChars, 0, decCounter)>maxWidth)
+            decCounter--;
+        return text.substring(0, decCounter);
     }
     
 }

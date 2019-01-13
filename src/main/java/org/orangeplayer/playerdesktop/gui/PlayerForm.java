@@ -62,8 +62,6 @@ public class PlayerForm extends javax.swing.JFrame {
 //        setContentPane(pane);
         initComponents();
         configSize();
-        //lblCover.setIcon(SysUtil.getResizedIcon((ImageIcon) lblCover.getIcon()));
-        //setResizable(false);
         musicChooser = new JFileChooser(new File("/home/"+System.getProperty("user.name")));
         configMusicChooser();
         configIconManager();
@@ -89,6 +87,17 @@ public class PlayerForm extends javax.swing.JFrame {
                 panelButtons, panelTrackInfo, trackContainer, buttonsContainer, 
                 lblAlbum, lblArtist, lblCover, lblDuration, lblTitle, volSlider, tableScroll, 
                 btnMute, btnNext, btnPlay, btnPrev, btnSeekNext, btnSeekPrev, btnShowMenu);
+        new Thread(()->{
+            while (true) {                
+                try {
+                    lblTitle.setLocation(lblTitle.getX()+1, lblTitle.getY());
+                    panelTrackInfo.updateUI();
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }).start();
     }
     
     private void configIconManager() {
@@ -193,7 +202,7 @@ public class PlayerForm extends javax.swing.JFrame {
         //setSize(newSize);
         setSize(preferredSize);
         //setMinimumSize(panelContent.getPreferredSize());
-        //setMinimumSize(preferredSize);
+        setMinimumSize(preferredSize);
     }
     
      private void configMusicChooser() {
@@ -326,6 +335,8 @@ public class PlayerForm extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Orange Player");
         setBackground(java.awt.Color.white);
+        setIconImage(R.icons("logo1.1.png").getImage()
+        );
 
         panelMenu.setBackground(R.colors.PRIMARY_COLOR);
         panelMenu.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -370,7 +381,7 @@ public class PlayerForm extends javax.swing.JFrame {
 
         panelTrackInfo.setBackground(java.awt.Color.white);
         panelTrackInfo.setForeground(java.awt.Color.black);
-        panelTrackInfo.setLayout(new java.awt.GridLayout(4, 1, 0, 5));
+        panelTrackInfo.setLayout(new java.awt.GridLayout(4, 1, 0, 10));
 
         lblTitle.setBackground(java.awt.Color.white);
         lblTitle.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N

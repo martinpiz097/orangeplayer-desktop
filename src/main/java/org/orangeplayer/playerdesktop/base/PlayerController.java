@@ -23,6 +23,8 @@ import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_DARK_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON;
+import org.orangeplayer.playerdesktop.sys.SysUtil;
+import static org.orangeplayer.playerdesktop.sys.SysUtil.trimToLabel;
 
 public class PlayerController extends Thread {
     private volatile Player player;
@@ -100,11 +102,18 @@ public class PlayerController extends Thread {
         else
             coverLabel.setIcon(getResizedIcon(darkEnabled?DEFAULT_DARK_COVER_ICON:DEFAULT_COVER_ICON));
 
-        titleLabel.setText(current.getTitle());
+        String title = current.getTitle();
         String album = current.getAlbum();
         String artist = current.getArtist();
-        albumLabel.setText(album == null ? "Álbum Desconocido" : album);
-        artistLabel.setText(artist == null ? "Artista Desconocido" : artist);
+        
+        album = album == null ? "Álbum Desconocido" : album;
+        artist = artist == null ? "Artista Desconocido" : artist;
+
+        titleLabel.setText(trimToLabel(title, titleLabel));
+        albumLabel.setText(trimToLabel(album, albumLabel));
+        artistLabel.setText(trimToLabel(artist, artistLabel));
+        form.getPanelTrackInfo().updateUI();
+        
         form.getLblDuration().setText(current.getFormattedDuration());
         form.getPanelContent().updateUI();
         int indexOf = player.getListSoundPaths().indexOf(player.getCurrent().getDataSource().getPath());

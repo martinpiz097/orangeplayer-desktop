@@ -29,4 +29,8 @@
     - Se crea clase R para manejar las rutas de los iconos y los objetos relacionados a los colores
     - Se agrega opcion de limpiar todo en el menu
 
+# 0.6-Beta
+    - La información de la cancion  como el título, album y artista se ajustan al tamaño 
+    del label en los que estan insertados
+
     
