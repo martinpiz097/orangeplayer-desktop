@@ -5,25 +5,17 @@ import org.muplayer.audio.Track;
 import org.orangeplayer.playerdesktop.gui.PlayerForm;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.table.TableColumnModel;
 import static org.orangeplayer.playerdesktop.sys.SysUtil.getResizedIcon;
 import org.orangeplayer.playerdesktop.model.TMTracks;
 import org.orangeplayer.playerdesktop.sys.Session;
 import org.orangeplayer.playerdesktop.sys.SessionKey;
 import static org.orangeplayer.playerdesktop.sys.SessionKey.DARK_MODE;
-import org.orangeplayer.playerdesktop.sys.SysInfo;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.DEFAULT_DARK_COVER_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON;
-import org.orangeplayer.playerdesktop.sys.SysUtil;
 import static org.orangeplayer.playerdesktop.sys.SysUtil.trimToLabel;
 
 public class PlayerController extends Thread {
@@ -151,6 +143,7 @@ public class PlayerController extends Thread {
         while (!player.isPlaying());
         //new TTableUpdater(tblTracks).start();
         //Thread.sleep(500);
+        Session.getInstance().set(SessionKey.GAIN, (int)player.getGain());
         
         TMTracks tblModel = (TMTracks) tblTracks.getModel();
         tblModel.loadList();

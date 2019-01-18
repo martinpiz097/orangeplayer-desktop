@@ -33,4 +33,10 @@
     - La información de la cancion  como el título, album y artista se ajustan al tamaño 
     del label en los que estan insertados
 
+# 0.7-Beta
+    - Se agrega split entre paneles de cancion y tabla
+    - Se agranda tamaño de filas en tabla de canciones
+    - Se cambia el color del fondo en el menu
+    - Se corrige problema con boton de volumen
+
     

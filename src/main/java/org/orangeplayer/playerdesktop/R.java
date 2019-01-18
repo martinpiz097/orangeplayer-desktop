@@ -23,7 +23,5 @@ public class R {
     public static ImageIcon icons(String path) {
         return new ImageIcon(R.class.getResource("/icons/"+path));
     }
-
-    
     
 }

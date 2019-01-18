@@ -13,6 +13,7 @@ import java.awt.Color;
  */
 public class AppColors {
     public static final Color PRIMARY_COLOR = Color.decode("#FA6024");
-    public static final Color SECUNDARY_COLOR = Color.decode("#ffab91");
+    public static final Color SECUNDARY_COLOR = Color.decode("#ff3d00");
+    public static final Color MENU_COLOR = Color.decode("#e0e0e0");
     public static final Color DARK_COLOR = Color.decode("#212121");
 }
