@@ -21,7 +21,6 @@ import org.orangeplayer.playerdesktop.sys.SysInfo;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.table.JTableHeader;
@@ -36,13 +35,17 @@ import java.util.logging.Logger;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
 import static java.awt.event.KeyEvent.VK_ENTER;
-import javax.swing.border.Border;
-import javax.swing.plaf.ButtonUI;
-import javax.swing.plaf.PanelUI;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import org.mpizexternal.MaterialLookAndFeel;
+import org.muplayer.audio.Track;
+import org.muplayer.audio.util.AudioExtensions;
+import org.muplayer.system.AudioUtil;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.*;
 import static org.orangeplayer.playerdesktop.gui.util.ComponentUtil.*;
+import org.orangeplayer.playerdesktop.gui.util.Toast;
 import org.orangeplayer.playerdesktop.sys.MemoryCleaner;
 
 
@@ -77,8 +80,8 @@ public class PlayerForm extends javax.swing.JFrame {
         showMenu();
         
         panelContent.updateUI();
-        panelListTracks.getViewport().setBackground(WHITE);
-        panelListTracks.getViewport().setForeground(R.colors.DARK_COLOR);
+        tableScroll.getViewport().setBackground(WHITE);
+        tableScroll.getViewport().setForeground(R.colors.DARK_COLOR);
 
         JTableHeader header = tblTracks.getTableHeader();
         header.setBackground(R.colors.PRIMARY_COLOR);
@@ -90,9 +93,9 @@ public class PlayerForm extends javax.swing.JFrame {
         session.add(SessionKey.DARK_MODE, false);
         session.add(SessionKey.GAIN, (int)controller.getPlayer().getGain());
 
-        ComponentManager.getInstance().add(panelContent, panelListTracks, panelControls, splitMusic,
+        ComponentManager.getInstance().add(panelContent, panelListTracks, panelControls, panelContainer, splitMusic,
                 panelButtons, panelTrackInfo, trackContainer, buttonsContainer,
-                lblAlbum, lblArtist, lblCover, lblDuration, lblTitle, volSlider,
+                lblAlbum, lblArtist, lblCover, lblDuration, lblTitle, lblVol, volSlider, tableScroll, 
                 btnMute, btnNext, btnPlay, btnPrev, btnSeekNext, btnSeekPrev, btnShowMenu);
         
         if (Boolean.parseBoolean(config.getProperty(UIConfig.KEYS.DARK_MODE))) {
@@ -153,8 +156,8 @@ public class PlayerForm extends javax.swing.JFrame {
             if ((controller.isAlive() && !controller.getPlayer().getCurrent().hasCover())
                     || (!controller.isAlive()))
                 lblCover.setIcon(R.icons("dark/vinilo.png"));
-            panelListTracks.getViewport().setBackground(R.colors.DARK_COLOR);
-            panelListTracks.getViewport().setForeground(WHITE);
+            tableScroll.getViewport().setBackground(R.colors.DARK_COLOR);
+            tableScroll.getViewport().setForeground(WHITE);
             tblTracks.setBackground(R.colors.DARK_COLOR);
             tblTracks.setForeground(WHITE);
 
@@ -191,8 +194,8 @@ public class PlayerForm extends javax.swing.JFrame {
                     || (!controller.isAlive()))
                 lblCover.setIcon(R.icons("vinilo.png"));
 
-            panelListTracks.getViewport().setBackground(WHITE);
-            panelListTracks.getViewport().setForeground(BLACK);
+            tableScroll.getViewport().setBackground(WHITE);
+            tableScroll.getViewport().setForeground(BLACK);
 
             tblTracks.setBackground(WHITE);
             tblTracks.setForeground(BLACK);
@@ -218,10 +221,13 @@ public class PlayerForm extends javax.swing.JFrame {
         Dimension preferredSize = getPreferredSize();
         Dimension maximumSize = getMaximumSize();
         
-        //Dimension newSize = new Dimension((int)(displaySize.getWidth()/1.5), (int)(displaySize.getHeight()/1.5));
-        //setSize(newSize);
-        setSize(preferredSize);
-        //setMinimumSize(panelContent.getPreferredSize());
+        Dimension newSize = new Dimension(displaySize);
+        newSize.setSize(newSize.getWidth()/1.5, newSize.getHeight()/1.64);
+        setSize(newSize);
+        //setSize(preferredSize);
+        
+        setResizable(false);
+        //setMinimumSize(preferredSize);
         //setMinimumSize(preferredSize);
     }
 
@@ -229,12 +235,15 @@ public class PlayerForm extends javax.swing.JFrame {
         musicChooser.setFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
-                return f.isDirectory();
+                String[] supported = AudioExtensions.SUPPORTEDEXTENSIONS;
+                return f.isDirectory() || Arrays.stream(supported)
+                        .parallel()
+                        .anyMatch(extension -> f.getName().endsWith(extension));
             }
 
             @Override
             public String getDescription() {
-                return "Solo Carpetas";
+                return "Solo Carpetas y archivos soportados";
             }
         });
         musicChooser.setDialogTitle("Biblioteca de Música");
@@ -310,6 +319,7 @@ public class PlayerForm extends javax.swing.JFrame {
 
         jCheckBoxMenuItem1 = new javax.swing.JCheckBoxMenuItem();
         panelMenu = new javax.swing.JPanel();
+        panelContainer = new javax.swing.JPanel();
         splitMusic = new javax.swing.JSplitPane();
         panelContent = new javax.swing.JPanel();
         btnShowMenu = new javax.swing.JButton();
@@ -331,7 +341,9 @@ public class PlayerForm extends javax.swing.JFrame {
         btnMute = new javax.swing.JButton();
         barProgress = new javax.swing.JProgressBar();
         volSlider = new javax.swing.JSlider();
-        panelListTracks = new javax.swing.JScrollPane();
+        lblVol = new javax.swing.JLabel();
+        panelListTracks = new javax.swing.JPanel();
+        tableScroll = new javax.swing.JScrollPane();
         tblTracks = new javax.swing.JTable();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -350,6 +362,7 @@ public class PlayerForm extends javax.swing.JFrame {
         optionGtk = new javax.swing.JRadioButtonMenuItem();
         optMaterial = new javax.swing.JRadioButtonMenuItem();
         optionMac = new javax.swing.JRadioButtonMenuItem();
+        itemRestoreConfig = new javax.swing.JMenuItem();
 
         jCheckBoxMenuItem1.setSelected(true);
         jCheckBoxMenuItem1.setText("jCheckBoxMenuItem1");
@@ -371,10 +384,16 @@ public class PlayerForm extends javax.swing.JFrame {
         });
         panelMenu.setLayout(new java.awt.GridLayout(100, 1));
 
+        panelContainer.setBackground(java.awt.Color.white);
+        panelContainer.setForeground(java.awt.Color.black);
+        panelContainer.setLayout(new java.awt.BorderLayout(5, 5));
+
         splitMusic.setBackground(java.awt.Color.white);
         splitMusic.setDividerSize(3);
+        splitMusic.setContinuousLayout(true);
 
         panelContent.setBackground(java.awt.Color.white);
+        panelContent.setForeground(java.awt.Color.black);
         panelContent.setName(""); // NOI18N
         panelContent.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseMoved(java.awt.event.MouseEvent evt) {
@@ -534,7 +553,7 @@ public class PlayerForm extends javax.swing.JFrame {
             buttonsContainerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(buttonsContainerLayout.createSequentialGroup()
                 .add(10, 10, 10)
-                .add(panelButtons, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                .add(panelButtons, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(10, 10, 10))
         );
 
@@ -575,6 +594,12 @@ public class PlayerForm extends javax.swing.JFrame {
             }
         });
 
+        lblVol.setBackground(java.awt.Color.white);
+        lblVol.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
+        lblVol.setForeground(java.awt.Color.black);
+        lblVol.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblVol.setText("85");
+
         org.jdesktop.layout.GroupLayout panelControlsLayout = new org.jdesktop.layout.GroupLayout(panelControls);
         panelControls.setLayout(panelControlsLayout);
         panelControlsLayout.setHorizontalGroup(
@@ -585,8 +610,10 @@ public class PlayerForm extends javax.swing.JFrame {
                     .add(panelControlsLayout.createSequentialGroup()
                         .add(btnMute, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 39, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(volSlider, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE)))
-                .add(27, 27, 27))
+                        .add(volSlider, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 322, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(0, 0, Short.MAX_VALUE)
+                        .add(lblVol, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(3, 3, 3))
         );
         panelControlsLayout.setVerticalGroup(
             panelControlsLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -595,8 +622,9 @@ public class PlayerForm extends javax.swing.JFrame {
                 .add(barProgress, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 31, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(10, 10, 10)
                 .add(panelControlsLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(volSlider, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
-                    .add(btnMute, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .add(volSlider, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(btnMute, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(lblVol, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .add(0, 0, 0))
         );
 
@@ -605,14 +633,15 @@ public class PlayerForm extends javax.swing.JFrame {
         trackContainerLayout.setHorizontalGroup(
             trackContainerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(trackContainerLayout.createSequentialGroup()
-                .add(0, 0, Short.MAX_VALUE)
-                .add(panelControls, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-            .add(trackContainerLayout.createSequentialGroup()
                 .add(trackContainerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(panelTrackInfo, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(lblCover, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
+                    .add(lblCover, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(buttonsContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(0, 0, Short.MAX_VALUE))
+            .add(trackContainerLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(panelControls, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         trackContainerLayout.setVerticalGroup(
             trackContainerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -633,9 +662,9 @@ public class PlayerForm extends javax.swing.JFrame {
             panelContentLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(panelContentLayout.createSequentialGroup()
                 .add(10, 10, 10)
-                .add(btnShowMenu, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 45, Short.MAX_VALUE)
+                .add(btnShowMenu, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(10, 10, 10)
-                .add(trackContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 400, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(trackContainer, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         panelContentLayout.setVerticalGroup(
@@ -650,8 +679,10 @@ public class PlayerForm extends javax.swing.JFrame {
 
         splitMusic.setLeftComponent(panelContent);
 
-        panelListTracks.setBackground(java.awt.Color.white);
-        panelListTracks.setForeground(java.awt.Color.black);
+        panelListTracks.setLayout(new java.awt.BorderLayout(10, 10));
+
+        tableScroll.setBackground(java.awt.Color.white);
+        tableScroll.setForeground(java.awt.Color.black);
 
         tblTracks.setBackground(java.awt.Color.white);
         tblTracks.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
@@ -674,9 +705,13 @@ public class PlayerForm extends javax.swing.JFrame {
                 tblTracksKeyPressed(evt);
             }
         });
-        panelListTracks.setViewportView(tblTracks);
+        tableScroll.setViewportView(tblTracks);
+
+        panelListTracks.add(tableScroll, java.awt.BorderLayout.CENTER);
 
         splitMusic.setRightComponent(panelListTracks);
+
+        panelContainer.add(splitMusic, java.awt.BorderLayout.CENTER);
 
         menuBar.setBackground(new java.awt.Color(238, 238, 238));
         menuBar.setForeground(java.awt.Color.black);
@@ -800,6 +835,14 @@ public class PlayerForm extends javax.swing.JFrame {
 
         jMenu3.add(itemChangeUi);
 
+        itemRestoreConfig.setText("Restablecer Configuraciones");
+        itemRestoreConfig.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                itemRestoreConfigActionPerformed(evt);
+            }
+        });
+        jMenu3.add(itemRestoreConfig);
+
         menuBar.add(jMenu3);
 
         setJMenuBar(menuBar);
@@ -810,14 +853,15 @@ public class PlayerForm extends javax.swing.JFrame {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .add(panelMenu, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(0, 0, 0)
-                .add(splitMusic, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 795, Short.MAX_VALUE)
-                .add(0, 0, 0))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(panelContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 927, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(panelMenu, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .add(splitMusic)
+            .add(layout.createSequentialGroup()
+                .add(panelContainer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(0, 0, Short.MAX_VALUE))
         );
 
         pack();
@@ -940,36 +984,11 @@ public class PlayerForm extends javax.swing.JFrame {
 //    }
     
     private void optMaterialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optMaterialActionPerformed
-        try {
-            PanelUI panelUi = panelMenu.getUI();
-            Border border = panelMenu.getBorder();
-            ButtonUI btnUi = ((JButton)panelMenu.getComponent(0)).getUI();
-            changeLookAndFeel(UILookAndFeel.MATERIAL);
-            UIManager.setLookAndFeel(new NimbusLookAndFeel());
-            SwingUtilities.updateComponentTreeUI(panelMenu);
-            panelMenu.setBackground(R.colors.PRIMARY_COLOR);
-            
-            Component[] components = panelMenu.getComponents();
-            Component comp;
-            
-            for (int i = 0; i < components.length; i++) {
-                comp = components[i];
-                if (comp instanceof JButton) {
-                    ((JButton) comp).setUI(btnUi);
-                    ((JButton) comp).updateUI();
-                    System.out.println("Changed");
-                }
-            }
-            panelMenu.setUI(panelUi);
-            panelMenu.setBorder(border);
-            panelMenu.updateUI();
-        } catch (UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        changeLookAndFeel(UILookAndFeel.MATERIAL);
     }//GEN-LAST:event_optMaterialActionPerformed
 
     private void optionDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionDefaultActionPerformed
-        changeLookAndFeel(UILookAndFeel.MAC);
+        changeLookAndFeel(UILookAndFeel.DEFAULT);
     }//GEN-LAST:event_optionDefaultActionPerformed
 
     private void itemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemExitActionPerformed
@@ -996,11 +1015,12 @@ public class PlayerForm extends javax.swing.JFrame {
             boolean darkMode = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
             int gain = (int) Session.getInstance().get(SessionKey.GAIN);
             if (vol == 0)
-            btnMute.setIcon(R.icons(darkMode?"dark/mute.png": "mute.png"));
+                btnMute.setIcon(R.icons(darkMode?"dark/mute.png": "mute.png"));
             else {
                 btnMute.setIcon(R.icons(darkMode?"dark/volume.png": "volume.png"));
                 Session.getInstance().set(SessionKey.GAIN, vol);
             }
+            lblVol.setText(String.valueOf(vol));
         }
     }//GEN-LAST:event_volSliderStateChanged
 
@@ -1084,6 +1104,11 @@ public class PlayerForm extends javax.swing.JFrame {
         changeLookAndFeel(UILookAndFeel.MAC);
     }//GEN-LAST:event_optionMacActionPerformed
 
+    private void itemRestoreConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemRestoreConfigActionPerformed
+        config.restoreConfigs();
+        Toast.show("¡Configuraciones Restablecidas!", Toast.LENGHT_SHORT);
+    }//GEN-LAST:event_itemRestoreConfigActionPerformed
+
     private void setUiOptionsChecked() {
         setItemsChecked(itemChangeUi);
     }
@@ -1103,7 +1128,7 @@ public class PlayerForm extends javax.swing.JFrame {
         switch (laf) {
             case DEFAULT:
                 config.setProperty(UIConfig.KEYS.THEME,
-                        McWinLookAndFeel.class.getName());
+                        SysInfo.DEFAULT_LOOK_AND_FEEL_CLASS);
                 config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, true);
                 optionDefault.setSelected(true);
                 break;
@@ -1144,24 +1169,14 @@ public class PlayerForm extends javax.swing.JFrame {
                 break;
         }
         //SwingUtilities.updateComponentTreeUI(this);
-        JOptionPane.showMessageDialog(this,
-                "¡Tema Modificado! Los cambios tendrán efecto después de reiniciar",
-                "Tema Modificado",
-                JOptionPane.INFORMATION_MESSAGE);
+        Toast.show("¡Tema Modificado! Los cambios tendrán efecto después de reiniciar", Toast.LENGHT_SHORT);
     }
     
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
-        UIConfig config = UIConfig.getInstance();
-        boolean isModern = Boolean.parseBoolean(config.getProperty(UIConfig.KEYS.IS_MODERN_THEME));
-        
-        if (isModern)
-            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME), true);
-        else
-            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME));
-        
+        configApplicationLookAndFeel();
         MemoryCleaner.startNow();
         java.awt.EventQueue.invokeLater(() -> {
             new PlayerForm().setVisible(true);
@@ -1185,6 +1200,7 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemExit;
     private javax.swing.JMenuItem itemOpenFile;
     private javax.swing.JMenuItem itemOpenFolder;
+    private javax.swing.JMenuItem itemRestoreConfig;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu3;
@@ -1193,6 +1209,7 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JLabel lblCover;
     private javax.swing.JLabel lblDuration;
     private javax.swing.JLabel lblTitle;
+    private javax.swing.JLabel lblVol;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JRadioButtonMenuItem optMaterial;
     private javax.swing.JRadioButtonMenuItem optSystem;
@@ -1202,12 +1219,14 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JRadioButtonMenuItem optionMetal;
     private javax.swing.JRadioButtonMenuItem optionNimbus;
     private javax.swing.JPanel panelButtons;
+    private javax.swing.JPanel panelContainer;
     private javax.swing.JPanel panelContent;
     private javax.swing.JPanel panelControls;
-    private javax.swing.JScrollPane panelListTracks;
+    private javax.swing.JPanel panelListTracks;
     private javax.swing.JPanel panelMenu;
     private javax.swing.JPanel panelTrackInfo;
     private javax.swing.JSplitPane splitMusic;
+    private javax.swing.JScrollPane tableScroll;
     private javax.swing.JTable tblTracks;
     private javax.swing.JPanel trackContainer;
     private javax.swing.JSlider volSlider;
@@ -1258,7 +1277,7 @@ public class PlayerForm extends javax.swing.JFrame {
     }
 
     public JScrollPane getjScrollPane1() {
-        return panelListTracks;
+        return tableScroll;
     }
 
     public JTable getjTable1() {

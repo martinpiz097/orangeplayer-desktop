@@ -1,5 +1,6 @@
 package org.orangeplayer.playerdesktop.sys;
 
+import com.jtattoo.plaf.mcwin.McWinLookAndFeel;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -20,6 +21,8 @@ public class SysInfo {
 
     public static final Dimension DISPLAY_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
+    public static final String DEFAULT_LOOK_AND_FEEL_CLASS = McWinLookAndFeel.class.getName();
+    
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String USER_NAME = System.getProperty("user.name");
     public static final File CONFIG_FOLDER;

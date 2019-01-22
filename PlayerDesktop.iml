@@ -33,6 +33,7 @@
     <orderEntry type="library" name="Maven: org:jaudiotagger:2.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.swinglabs:swing-layout:1.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.mpizexternal:material-ui-swing:0.9.3.4" level="project" />
+    <orderEntry type="library" name="Maven: com.jtattoo:JTattoo:1.6.11" level="project" />
   </component>
   <component name="POM File Configuration" pomFile="" />
 </module>

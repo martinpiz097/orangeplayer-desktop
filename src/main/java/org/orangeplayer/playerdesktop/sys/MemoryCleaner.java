@@ -19,7 +19,7 @@ import org.muplayer.audio.util.Time;
 public class MemoryCleaner extends Thread {
 
     private static final int TIME_INTERVAL = 30; // SECS
-    private static final long MAX_MEM_DIF = (long) (Math.pow(1024, 2)*20);
+    private static final long MAX_MEM_DIF = (long) (Math.pow(1024, 2)*100);
     
     private static MemoryCleaner instance;
 
@@ -51,18 +51,16 @@ public class MemoryCleaner extends Thread {
     
     @Override
     public void run() {
-        System.out.println("Total: "+Runtime.getRuntime().totalMemory());
-        System.out.println("Max: "+Runtime.getRuntime().maxMemory());
-        System.out.println("Free: "+Runtime.getRuntime().freeMemory());
+//        System.out.println("Total: "+Runtime.getRuntime().totalMemory()/1024);
+//        System.out.println("Max: "+Runtime.getRuntime().maxMemory()/1024);
+//        System.out.println("Free: "+Runtime.getRuntime().freeMemory()/1024);
         final long ti = System.currentTimeMillis();
         final Runtime runtime = Runtime.getRuntime();
         
         while (true) {            
             try {
-                if (isLimitArraised()) {
+                if (isLimitArraised())
                     System.gc();
-                    System.out.println("Memory Cleaned! at "+Clock.system(ZoneId.systemDefault()).toString());
-                }
                 Thread.sleep(TIME_INTERVAL*1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(MemoryCleaner.class.getName()).log(Level.SEVERE, null, ex);

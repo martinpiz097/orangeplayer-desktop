@@ -39,7 +39,7 @@
     - Se cambia el color del fondo en el menu
     - Se corrige problema con boton de volumen
 
-# 0.8-Beta (Actual-No Subida)
+# 0.8-Beta
     - Se agrega opcion para cambiar lookandfeel (metal, nimbus, gtk y system)
     - Se agrega soporte para Material LookAndFeel (beta)
     - Se agrega soporte para Jtattoo LookAndFeels
@@ -50,3 +50,9 @@
     luego de reiniciar la aplicacion
     - Estilo por defecto tipo Mac OSX
     
+# 0.9-Beta
+    - Se corrige excepcion lanzada al escoger material theme
+    - Se agrega soporte de mensajes Toast
+    - Se agrega label para indicar el valor del volumen actual
+    - Tamaño de ventana se adapta a pantalla
+    - Se mejora memoryCleaner

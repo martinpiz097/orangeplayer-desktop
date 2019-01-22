@@ -16,6 +16,7 @@ import java.nio.file.LinkOption;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.orangeplayer.playerdesktop.sys.SysInfo;
 import static org.orangeplayer.playerdesktop.sys.SysInfo.CONFIG_FOLDER;
 
 /**
@@ -61,7 +62,7 @@ public class UIConfig {
             Files.setAttribute(fileConfig.toPath(), "dos:hidden", Boolean.TRUE, LinkOption.NOFOLLOW_LINKS);
             
             // Properties
-            props.setProperty(KEYS.THEME.name(), McWinLookAndFeel.class.getName());
+            props.setProperty(KEYS.THEME.name(), SysInfo.DEFAULT_LOOK_AND_FEEL_CLASS);
             props.setProperty(KEYS.IS_MODERN_THEME.name(), Boolean.toString(true));
             props.setProperty(KEYS.DARK_MODE.name(), Boolean.toString(false));
 
@@ -97,6 +98,19 @@ public class UIConfig {
     public void setProperty(KEYS key, Object value) {
         props.setProperty(key.name(), value.toString());
         saveData();
+    }
+    
+    public void restoreConfigs() {
+        try {
+            props = null;
+            props = new Properties();
+            fileConfig.delete();
+            fileConfig.createNewFile();
+            saveDefaultData();
+        } catch (IOException ex) {
+            Logger.getLogger(UIConfig.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
     
 }

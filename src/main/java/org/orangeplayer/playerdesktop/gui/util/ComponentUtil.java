@@ -20,6 +20,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import org.mpizexternal.animation.MaterialUIMovement;
 import org.mpizexternal.animation.MaterialUITimer;
+import org.orangeplayer.playerdesktop.gui.UIConfig;
 
 /**
  *
@@ -94,5 +95,16 @@ public class ComponentUtil {
          }
         
     }
+    
+    public static void configApplicationLookAndFeel() {
+        UIConfig config = UIConfig.getInstance();
+        boolean isModern = Boolean.parseBoolean(config.getProperty(UIConfig.KEYS.IS_MODERN_THEME));
+        
+        if (isModern)
+            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME), true);
+        else
+            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME));
+    }    
+    
     
 }
