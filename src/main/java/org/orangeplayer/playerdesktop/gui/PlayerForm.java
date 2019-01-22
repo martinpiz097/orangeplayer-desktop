@@ -5,34 +5,8 @@
  */
 package org.orangeplayer.playerdesktop.gui;
 
-import static java.awt.Color.BLACK;
-import static java.awt.Color.WHITE;
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import static java.awt.event.KeyEvent.VK_ENTER;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JTable;
-import javax.swing.UIManager;
-import javax.swing.border.LineBorder;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.table.JTableHeader;
+import com.jtattoo.plaf.mcwin.McWinLookAndFeel;
+import com.sun.java.swing.plaf.gtk.GTKLookAndFeel;
 import org.muplayer.audio.Player;
 import org.muplayer.audio.SeekOption;
 import org.orangeplayer.playerdesktop.R;
@@ -43,10 +17,34 @@ import org.orangeplayer.playerdesktop.sys.ComponentManager;
 import org.orangeplayer.playerdesktop.sys.Session;
 import org.orangeplayer.playerdesktop.sys.SessionKey;
 import org.orangeplayer.playerdesktop.sys.SysInfo;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_ICON;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PAUSE_DARK_ICON;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PLAYER_DARK_ICON;
-import static org.orangeplayer.playerdesktop.sys.SysInfo.PLAYER_ICON;
+
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.awt.Color.BLACK;
+import static java.awt.Color.WHITE;
+import static java.awt.event.KeyEvent.VK_ENTER;
+import javax.swing.border.Border;
+import javax.swing.plaf.ButtonUI;
+import javax.swing.plaf.PanelUI;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
+import org.mpizexternal.MaterialLookAndFeel;
+import static org.orangeplayer.playerdesktop.sys.SysInfo.*;
+import static org.orangeplayer.playerdesktop.gui.util.ComponentUtil.*;
+import org.orangeplayer.playerdesktop.sys.MemoryCleaner;
+
 
 /**
  *
@@ -56,42 +54,68 @@ public class PlayerForm extends javax.swing.JFrame {
 
     private PlayerController controller;
     private JFileChooser musicChooser;
+
+    private UIConfig config;
     
     public PlayerForm() {
 //        JLayeredPane pane = new JLayeredPane();
 //        pane.setLayout(new OverlayLayout(pane));
 //        setContentPane(pane);
+
+        config = UIConfig.getInstance();
         initComponents();
+        controller = new PlayerController(this);
+        
         configSize();
         musicChooser = new JFileChooser(new File("/home/"+System.getProperty("user.name")));
         configMusicChooser();
         configIconManager();
         setLocationRelativeTo(null);
         configMenuButtons();
-        
-        hideMenu();
+
+        //hideMenu();
+        showMenu();
         
         panelContent.updateUI();
-        tableScroll.getViewport().setBackground(WHITE);
-        tableScroll.getViewport().setForeground(R.colors.DARK_COLOR);
-        
+        panelListTracks.getViewport().setBackground(WHITE);
+        panelListTracks.getViewport().setForeground(R.colors.DARK_COLOR);
+
         JTableHeader header = tblTracks.getTableHeader();
         header.setBackground(R.colors.PRIMARY_COLOR);
         header.setForeground(WHITE);
-        
-        controller = new PlayerController(this);
+
         //controller.setColumnsLeghts(((TMTracks)tblTracks.getModel()).getMaxValuesLenghts());
         Session session = Session.getInstance();
         session.add(SessionKey.CONTROLLER, controller);
         session.add(SessionKey.DARK_MODE, false);
         session.add(SessionKey.GAIN, (int)controller.getPlayer().getGain());
-        
-        ComponentManager.getInstance().add(panelContent, panelListTracks, panelControls, splitMusic, 
-                panelButtons, panelTrackInfo, trackContainer, buttonsContainer, 
-                lblAlbum, lblArtist, lblCover, lblDuration, lblTitle, volSlider, tableScroll, 
+
+        ComponentManager.getInstance().add(panelContent, panelListTracks, panelControls, splitMusic,
+                panelButtons, panelTrackInfo, trackContainer, buttonsContainer,
+                lblAlbum, lblArtist, lblCover, lblDuration, lblTitle, volSlider,
                 btnMute, btnNext, btnPlay, btnPrev, btnSeekNext, btnSeekPrev, btnShowMenu);
+        
+        if (Boolean.parseBoolean(config.getProperty(UIConfig.KEYS.DARK_MODE))) {
+            setDarkMode(true);
+            itemDarkMode.setSelected(true);
+        }
+        configTransitions();
     }
     
+    private void configTransitions() {
+        Component[] components = panelButtons.getComponents();
+        final int componentsCount = components.length;
+        Component comp;
+        JButton btn;
+        
+        for (int i = 0; i < componentsCount; i++) {
+            comp = components[i];
+            if (comp instanceof JButton)
+                asignTransition((JButton)comp, R.colors.PRIMARY_COLOR);
+        }
+        asignTransition(btnMute, R.colors.PRIMARY_COLOR);
+    }
+
     private void configIconManager() {
         /*IconManager iconMgr = IconManager.newInstance(false);
         iconMgr.addComponent(btnMute, IconType.COVER);
@@ -105,42 +129,44 @@ public class PlayerForm extends javax.swing.JFrame {
         iconMgr.addComponent(btnMute, IconType.PREVTRACK);
         iconMgr.addComponent(btnMute, IconType.STOP);
         iconMgr.addComponent(btnMute, IconType.UNMUTE);*/
-        
+
     }
-    
+
     private void setDarkMode(boolean enable) {
         Class<? extends PlayerForm> clazz = getClass();
         Session.getInstance().set(SessionKey.DARK_MODE, enable);
-        String muteIcon = controller.getPlayer().isMute() && controller.isAlive() 
+        String muteIcon = controller.getPlayer().isMute() && controller.isAlive()
                 ? "mute.png" : "volume.png";
-        
+
         if (enable) {
             ComponentManager.getInstance().configColors(R.colors.DARK_COLOR, WHITE);
             setBackground(R.colors.DARK_COLOR);
             setForeground(WHITE);
-            btnMute.setIcon(new ImageIcon(clazz.getResource("/icons/dark/"+muteIcon)));
-            btnNext.setIcon(new ImageIcon(clazz.getResource("/icons/dark/seekNext.png")));
-            btnPlay.setIcon(new ImageIcon(clazz.getResource("/icons/dark/play.png")));
-            btnPrev.setIcon(new ImageIcon(clazz.getResource("/icons/dark/seekPrev.png")));
-            btnSeekNext.setIcon(new ImageIcon(clazz.getResource("/icons/dark/trackNext.png")));
-            btnSeekPrev.setIcon(new ImageIcon(clazz.getResource("/icons/dark/trackPrev.png")));
-            btnShowMenu.setIcon(new ImageIcon(clazz.getResource("/icons/dark/menu.png")));
-            
-            if (controller.isAlive())
-                if (!controller.getPlayer().getCurrent().hasCover())
-                    lblCover.setIcon(R.icons("dark/vinilo.png"));
-            tableScroll.getViewport().setBackground(R.colors.DARK_COLOR);
-            tableScroll.getViewport().setForeground(WHITE);
+            btnMute.setIcon(R.icons("dark/"+muteIcon));
+            btnNext.setIcon(R.icons("dark/seekNext.png"));
+            btnPlay.setIcon(R.icons("dark/play.png"));
+            btnPrev.setIcon(R.icons("dark/seekPrev.png"));
+            btnSeekNext.setIcon(R.icons("dark/trackNext.png"));
+            btnSeekPrev.setIcon(R.icons("dark/trackPrev.png"));
+            btnShowMenu.setIcon(R.icons("dark/menu.png"));
+
+            if ((controller.isAlive() && !controller.getPlayer().getCurrent().hasCover())
+                    || (!controller.isAlive()))
+                lblCover.setIcon(R.icons("dark/vinilo.png"));
+            panelListTracks.getViewport().setBackground(R.colors.DARK_COLOR);
+            panelListTracks.getViewport().setForeground(WHITE);
             tblTracks.setBackground(R.colors.DARK_COLOR);
             tblTracks.setForeground(WHITE);
 
-            panelButtons.setBorder(new LineBorder(WHITE, 1));
+            //panelButtons.setBorder(new LineBorder(WHITE, 1));
+
+            splitMusic.setBackground(R.colors.DARK_COLOR);
             
             validate();
-            
-            
+
+
             /*Component[] components = panelMenu.getComponents();
-            
+
             Component component;
             for (int i = 0; i < components.length; i++) {
                 component = components[i];
@@ -153,50 +179,52 @@ public class PlayerForm extends javax.swing.JFrame {
             ComponentManager.getInstance().configColors(WHITE, BLACK);
             setBackground(WHITE);
             setForeground(BLACK);
-            btnMute.setIcon(new ImageIcon(clazz.getResource("/icons/"+muteIcon)));
-            btnNext.setIcon(new ImageIcon(clazz.getResource("/icons/seekNext.png")));
-            btnPlay.setIcon(new ImageIcon(clazz.getResource("/icons/play.png")));
-            btnPrev.setIcon(new ImageIcon(clazz.getResource("/icons/seekPrev.png")));
-            btnSeekNext.setIcon(new ImageIcon(clazz.getResource("/icons/trackNext.png")));
-            btnSeekPrev.setIcon(new ImageIcon(clazz.getResource("/icons/trackPrev.png")));
-            btnShowMenu.setIcon(new ImageIcon(clazz.getResource("/icons/menu.png")));
-            
-            if (controller.isAlive())
-                if (!controller.getPlayer().getCurrent().hasCover())
-                    lblCover.setIcon(new ImageIcon(clazz.getResource("/icons/vinilo.png")));
-            
-            tableScroll.getViewport().setBackground(WHITE);
-            tableScroll.getViewport().setForeground(BLACK);
-            
+            btnMute.setIcon(R.icons(muteIcon));
+            btnNext.setIcon(R.icons("seekNext.png"));
+            btnPlay.setIcon(R.icons("play.png"));
+            btnPrev.setIcon(R.icons("seekPrev.png"));
+            btnSeekNext.setIcon(R.icons("trackNext.png"));
+            btnSeekPrev.setIcon(R.icons("trackPrev.png"));
+            btnShowMenu.setIcon(R.icons("menu.png"));
+
+           if ((controller.isAlive() && !controller.getPlayer().getCurrent().hasCover())
+                    || (!controller.isAlive()))
+                lblCover.setIcon(R.icons("vinilo.png"));
+
+            panelListTracks.getViewport().setBackground(WHITE);
+            panelListTracks.getViewport().setForeground(BLACK);
+
             tblTracks.setBackground(WHITE);
             tblTracks.setForeground(BLACK);
-            
-            panelButtons.setBorder(new LineBorder(BLACK, 1));
-            
+
+            //panelButtons.setBorder(new LineBorder(BLACK, 1));
+
+            splitMusic.setBackground(WHITE);
             validate();
         }
     }
-
     private void showMenu() {
         panelMenu.setVisible(true);
         btnShowMenu.setVisible(false);
     }
-    
+
     private void hideMenu() {
         panelMenu.setVisible(false);
         btnShowMenu.setVisible(true);
     }
-    
+
     private void configSize() {
         Dimension displaySize = SysInfo.DISPLAY_SIZE;
         Dimension preferredSize = getPreferredSize();
+        Dimension maximumSize = getMaximumSize();
+        
         //Dimension newSize = new Dimension((int)(displaySize.getWidth()/1.5), (int)(displaySize.getHeight()/1.5));
         //setSize(newSize);
         setSize(preferredSize);
         //setMinimumSize(panelContent.getPreferredSize());
         //setMinimumSize(preferredSize);
     }
-    
+
      private void configMusicChooser() {
         musicChooser.setFileFilter(new FileFilter() {
             @Override
@@ -213,23 +241,23 @@ public class PlayerForm extends javax.swing.JFrame {
         musicChooser.setMultiSelectionEnabled(true);
         musicChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
-     
+
     private void configMenuButtons() {
         MenuButton btnAddMusic = new MenuButton("Cargar Música", R.icons("menu/open.png"));
         btnAddMusic.addActionListener((ActionEvent e) -> {
             itemAddFolder.doClick();
         });
-        
+
         MenuButton btnAddSongs = new MenuButton("Cargar Canciones", R.icons("menu/open.png"));
         btnAddSongs.addActionListener((ActionEvent e) -> {
             itemAddSongs.doClick();
         });
-        
+
         //MenuButton btnAddSongs = new MenuButton("Cargar Canciones", R.icons("menu/open.png"));
 //        btnAddSongs.addActionListener((ActionEvent e) -> {
 //            itemAddSongs.doClick();
 //        });
-        
+
         MenuButton btnClearList = new MenuButton("Limpiar Todo", R.icons("menu/clear.png"));
         btnClearList.addActionListener((ActionEvent e) -> {
             if (controller.isAlive()) {
@@ -267,7 +295,7 @@ public class PlayerForm extends javax.swing.JFrame {
         });
         panelMenu.add(btnAddMusic);
         panelMenu.add(btnClearList);
-        
+
         panelMenu.updateUI();
     }
 
@@ -303,8 +331,7 @@ public class PlayerForm extends javax.swing.JFrame {
         btnMute = new javax.swing.JButton();
         barProgress = new javax.swing.JProgressBar();
         volSlider = new javax.swing.JSlider();
-        panelListTracks = new javax.swing.JPanel();
-        tableScroll = new javax.swing.JScrollPane();
+        panelListTracks = new javax.swing.JScrollPane();
         tblTracks = new javax.swing.JTable();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -312,9 +339,17 @@ public class PlayerForm extends javax.swing.JFrame {
         itemOpenFile = new javax.swing.JMenuItem();
         itemAddFolder = new javax.swing.JMenuItem();
         itemAddSongs = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
+        itemExit = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         itemDarkMode = new javax.swing.JCheckBoxMenuItem();
+        itemChangeUi = new javax.swing.JMenu();
+        optionDefault = new javax.swing.JRadioButtonMenuItem();
+        optSystem = new javax.swing.JRadioButtonMenuItem();
+        optionMetal = new javax.swing.JRadioButtonMenuItem();
+        optionNimbus = new javax.swing.JRadioButtonMenuItem();
+        optionGtk = new javax.swing.JRadioButtonMenuItem();
+        optMaterial = new javax.swing.JRadioButtonMenuItem();
+        optionMac = new javax.swing.JRadioButtonMenuItem();
 
         jCheckBoxMenuItem1.setSelected(true);
         jCheckBoxMenuItem1.setText("jCheckBoxMenuItem1");
@@ -334,7 +369,7 @@ public class PlayerForm extends javax.swing.JFrame {
                 panelMenuMouseExited(evt);
             }
         });
-        panelMenu.setLayout(new java.awt.GridLayout(100, 1, 0, 5));
+        panelMenu.setLayout(new java.awt.GridLayout(100, 1));
 
         splitMusic.setBackground(java.awt.Color.white);
         splitMusic.setDividerSize(3);
@@ -417,7 +452,6 @@ public class PlayerForm extends javax.swing.JFrame {
         buttonsContainer.setToolTipText("");
 
         panelButtons.setBackground(java.awt.Color.white);
-        panelButtons.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         panelButtons.setForeground(java.awt.Color.black);
         panelButtons.setToolTipText("");
         panelButtons.setLayout(new java.awt.GridLayout(1, 5, 10, 0));
@@ -428,14 +462,6 @@ public class PlayerForm extends javax.swing.JFrame {
         btnPrev.setBorderPainted(false);
         btnPrev.setFocusPainted(false);
         btnPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnPrev.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnPrevMouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnPrevMouseEntered(evt);
-            }
-        });
         btnPrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPrevActionPerformed(evt);
@@ -449,14 +475,6 @@ public class PlayerForm extends javax.swing.JFrame {
         btnSeekPrev.setBorderPainted(false);
         btnSeekPrev.setFocusPainted(false);
         btnSeekPrev.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnSeekPrev.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnSeekPrevMouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnSeekPrevMouseEntered(evt);
-            }
-        });
         btnSeekPrev.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSeekPrevActionPerformed(evt);
@@ -470,14 +488,6 @@ public class PlayerForm extends javax.swing.JFrame {
         btnPlay.setBorderPainted(false);
         btnPlay.setFocusPainted(false);
         btnPlay.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnPlay.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnPlayMouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnPlayMouseEntered(evt);
-            }
-        });
         btnPlay.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPlayActionPerformed(evt);
@@ -491,14 +501,6 @@ public class PlayerForm extends javax.swing.JFrame {
         btnNext.setBorderPainted(false);
         btnNext.setFocusPainted(false);
         btnNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnNext.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnNextMouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnNextMouseEntered(evt);
-            }
-        });
         btnNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNextActionPerformed(evt);
@@ -512,14 +514,6 @@ public class PlayerForm extends javax.swing.JFrame {
         btnSeekNext.setBorderPainted(false);
         btnSeekNext.setFocusPainted(false);
         btnSeekNext.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnSeekNext.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btnSeekNextMouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnSeekNextMouseEntered(evt);
-            }
-        });
         btnSeekNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSeekNextActionPerformed(evt);
@@ -540,7 +534,7 @@ public class PlayerForm extends javax.swing.JFrame {
             buttonsContainerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(buttonsContainerLayout.createSequentialGroup()
                 .add(10, 10, 10)
-                .add(panelButtons, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 59, Short.MAX_VALUE)
+                .add(panelButtons, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
                 .add(10, 10, 10))
         );
 
@@ -658,10 +652,6 @@ public class PlayerForm extends javax.swing.JFrame {
 
         panelListTracks.setBackground(java.awt.Color.white);
         panelListTracks.setForeground(java.awt.Color.black);
-        panelListTracks.setLayout(new java.awt.BorderLayout());
-
-        tableScroll.setBackground(java.awt.Color.white);
-        tableScroll.setForeground(java.awt.Color.black);
 
         tblTracks.setBackground(java.awt.Color.white);
         tblTracks.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
@@ -669,7 +659,8 @@ public class PlayerForm extends javax.swing.JFrame {
         tblTracks.setModel(new TMTracks());
         tblTracks.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         tblTracks.setGridColor(java.awt.Color.white);
-        tblTracks.setRowHeight(30);
+        tblTracks.setRowHeight(20);
+        tblTracks.setRowMargin(5);
         tblTracks.setSelectionBackground(R.colors.SECUNDARY_COLOR);
         tblTracks.setSelectionForeground(java.awt.Color.white);
         tblTracks.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -683,16 +674,14 @@ public class PlayerForm extends javax.swing.JFrame {
                 tblTracksKeyPressed(evt);
             }
         });
-        tableScroll.setViewportView(tblTracks);
-
-        panelListTracks.add(tableScroll, java.awt.BorderLayout.CENTER);
+        panelListTracks.setViewportView(tblTracks);
 
         splitMusic.setRightComponent(panelListTracks);
 
         menuBar.setBackground(new java.awt.Color(238, 238, 238));
         menuBar.setForeground(java.awt.Color.black);
 
-        jMenu1.setText("File");
+        jMenu1.setText("Archivo");
 
         itemOpenFolder.setText("Abrir Carpeta");
         itemOpenFolder.addActionListener(new java.awt.event.ActionListener() {
@@ -721,10 +710,16 @@ public class PlayerForm extends javax.swing.JFrame {
         itemAddSongs.setText("Agregar Canciones");
         jMenu1.add(itemAddSongs);
 
-        menuBar.add(jMenu1);
+        itemExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        itemExit.setText("Salir");
+        itemExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                itemExitActionPerformed(evt);
+            }
+        });
+        jMenu1.add(itemExit);
 
-        jMenu2.setText("Edit");
-        menuBar.add(jMenu2);
+        menuBar.add(jMenu1);
 
         jMenu3.setText("Interfaz");
 
@@ -736,6 +731,74 @@ public class PlayerForm extends javax.swing.JFrame {
             }
         });
         jMenu3.add(itemDarkMode);
+
+        itemChangeUi.setText("Cambiar Tema");
+
+        optionDefault.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optionDefault.setSelected(true);
+        optionDefault.setText("Default");
+        optionDefault.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optionDefaultActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optionDefault);
+
+        optSystem.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optSystem.setText("System");
+        optSystem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optSystemActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optSystem);
+
+        optionMetal.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optionMetal.setText("Metal");
+        optionMetal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optionMetalActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optionMetal);
+
+        optionNimbus.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optionNimbus.setText("Nimbus");
+        optionNimbus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optionNimbusActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optionNimbus);
+
+        optionGtk.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optionGtk.setText("GTK");
+        optionGtk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optionGtkActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optionGtk);
+
+        optMaterial.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optMaterial.setText("Material Design");
+        optMaterial.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optMaterialActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optMaterial);
+
+        optionMac.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        optionMac.setText("Mac Theme");
+        optionMac.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                optionMacActionPerformed(evt);
+            }
+        });
+        itemChangeUi.add(optionMac);
+
+        jMenu3.add(itemChangeUi);
 
         menuBar.add(jMenu3);
 
@@ -760,117 +823,6 @@ public class PlayerForm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnPlayMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPlayMouseEntered
-        btnPlay.setBackground(R.colors.PRIMARY_COLOR);
-    }//GEN-LAST:event_btnPlayMouseEntered
-
-    private void btnNextMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNextMouseEntered
-        btnNext.setBackground(R.colors.PRIMARY_COLOR);                                    
-    }//GEN-LAST:event_btnNextMouseEntered
-
-    private void btnSeekNextMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekNextMouseEntered
-        btnSeekNext.setBackground(R.colors.PRIMARY_COLOR);
-    }//GEN-LAST:event_btnSeekNextMouseEntered
-
-    private void btnPrevMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPrevMouseEntered
-        btnPrev.setBackground(R.colors.PRIMARY_COLOR);
-    }//GEN-LAST:event_btnPrevMouseEntered
-
-    private void btnSeekPrevMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekPrevMouseEntered
-        btnSeekPrev.setBackground(R.colors.PRIMARY_COLOR);
-    }//GEN-LAST:event_btnSeekPrevMouseEntered
-
-    private void btnPlayMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPlayMouseExited
-        boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-        btnPlay.setBackground(dark?R.colors.DARK_COLOR:WHITE);
-    }//GEN-LAST:event_btnPlayMouseExited
-
-    private void btnNextMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNextMouseExited
-        boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-        btnNext.setBackground(dark?R.colors.DARK_COLOR:WHITE);
-    }//GEN-LAST:event_btnNextMouseExited
-
-    private void btnSeekNextMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekNextMouseExited
-        boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-        btnSeekNext.setBackground(dark?R.colors.DARK_COLOR:WHITE);
-    }//GEN-LAST:event_btnSeekNextMouseExited
-
-    private void btnSeekPrevMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSeekPrevMouseExited
-        boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-        btnSeekPrev.setBackground(dark?R.colors.DARK_COLOR:WHITE);
-    }//GEN-LAST:event_btnSeekPrevMouseExited
-
-    private void btnPrevMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPrevMouseExited
-        boolean dark = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-        btnPrev.setBackground(dark?R.colors.DARK_COLOR:WHITE);
-    }//GEN-LAST:event_btnPrevMouseExited
-
-    private void btnPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayActionPerformed
-        if (controller.isAlive()) {
-            boolean darkEnabled = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-            Player player = controller.getPlayer();
-            if (player.isPlaying()) {
-                player.pause();
-                btnPlay.setIcon(darkEnabled?PLAYER_DARK_ICON:PLAYER_ICON);
-            }
-            else {
-                player.resumeTrack();
-                btnPlay.setIcon(darkEnabled?PAUSE_DARK_ICON:PAUSE_ICON);
-            }
-        }
-    }//GEN-LAST:event_btnPlayActionPerformed
-
-    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-        if (controller.isAlive())
-            controller.getPlayer().playNext();
-    }//GEN-LAST:event_btnNextActionPerformed
-
-    private void btnSeekPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekPrevActionPerformed
-        if (controller.isAlive())
-            controller.getPlayer().playPrevious();
-    }//GEN-LAST:event_btnSeekPrevActionPerformed
-
-    private void btnSeekNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekNextActionPerformed
-        if (controller.isAlive())
-            controller.getPlayer().seekFolder(SeekOption.NEXT);
-    }//GEN-LAST:event_btnSeekNextActionPerformed
-
-    private void btnPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrevActionPerformed
-        if (controller.isAlive())
-            controller.getPlayer().seekFolder(SeekOption.PREV);
-    }//GEN-LAST:event_btnPrevActionPerformed
-
-    private void barProgressMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_barProgressMouseClicked
-        if (evt.getButton() == MouseEvent.BUTTON1) {
-            Player player = controller.getPlayer();
-            
-            Rectangle bounds = barProgress.getBounds();
-            int position = evt.getX();
-            double maxX = bounds.getMaxX();
-            double minX = bounds.getMinX();
-            int distance = (int) (maxX-minX);
-            long trackDuration = player.getCurrent().getDuration();
-            long goTo = (position*trackDuration) / distance;
-            try {
-                barProgress.setValue((int) goTo);
-                player.getCurrent().gotoSecond(goTo);
-                
-                
-            } catch (IOException | LineUnavailableException | UnsupportedAudioFileException ex) {
-                Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-        }
-    }//GEN-LAST:event_barProgressMouseClicked
-
-    private void lblCoverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCoverMouseClicked
-        hideMenu();
-    }//GEN-LAST:event_lblCoverMouseClicked
-
-    private void panelContentMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelContentMouseClicked
-        hideMenu();
-    }//GEN-LAST:event_panelContentMouseClicked
-
     private void panelMenuMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelMenuMouseExited
         /*Point point = evt.getPoint();
         Rectangle bounds = panelMenu.getBounds();
@@ -879,44 +831,21 @@ public class PlayerForm extends javax.swing.JFrame {
         }*/
     }//GEN-LAST:event_panelMenuMouseExited
 
-    private void panelContentMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelContentMouseMoved
-//        int x = evt.getX();
-//        if (x - evt.getComponent().getBounds().getMinX() < 21)
-//            showMenu();
-//        else
-//            hideMenu();
-    }//GEN-LAST:event_panelContentMouseMoved
-
     private void itemDarkModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemDarkModeActionPerformed
-        setDarkMode(itemDarkMode.isSelected());
+        boolean darkEnabled = itemDarkMode.isSelected();
+        setDarkMode(darkEnabled);
+        config.setProperty(UIConfig.KEYS.DARK_MODE, darkEnabled);
+        
+        configTransitions();
+//        try {
+//            UIManager.setLookAndFeel(new HiFiLookAndFeel());
+//            SwingUtilities.updateComponentTreeUI(this);
+//            
+//        } catch (UnsupportedLookAndFeelException ex) {
+//            Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        
     }//GEN-LAST:event_itemDarkModeActionPerformed
-
-    private void volSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volSliderStateChanged
-        if (controller.isAlive()) {
-            int vol = volSlider.getValue();
-            controller.getPlayer().setGain(vol);
-            
-            boolean darkMode = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
-            int gain = (int) Session.getInstance().get(SessionKey.GAIN);
-            if (vol == 0)
-                btnMute.setIcon(R.icons(darkMode?"dark/mute.png": "mute.png"));
-            else {
-                btnMute.setIcon(R.icons(darkMode?"dark/volume.png": "volume.png"));
-                Session.getInstance().set(SessionKey.GAIN, vol);
-            }
-        }
-    }//GEN-LAST:event_volSliderStateChanged
-
-    private void btnMuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuteActionPerformed
-         if (controller.isAlive()) {
-             Player player = controller.getPlayer();
-             if (player.isMute())
-                 volSlider.setValue((int) Session.getInstance().get(SessionKey.GAIN));
-             else
-                 volSlider.setValue(0);
-             
-         }
-    }//GEN-LAST:event_btnMuteActionPerformed
 
     private void itemOpenFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemOpenFileActionPerformed
         // TODO add your handling code here:
@@ -924,10 +853,6 @@ public class PlayerForm extends javax.swing.JFrame {
 
     private void itemOpenFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemOpenFolderActionPerformed
     }//GEN-LAST:event_itemOpenFolderActionPerformed
-
-    private void btnShowMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowMenuActionPerformed
-        showMenu();
-    }//GEN-LAST:event_btnShowMenuActionPerformed
 
     private void itemAddFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAddFolderActionPerformed
         musicChooser.showOpenDialog(null);
@@ -941,10 +866,11 @@ public class PlayerForm extends javax.swing.JFrame {
 
             if (player.hasSounds()) {
                 if (controller.isAlive()) {
-                    ((TMTracks) tblTracks.getModel()).loadList();
+                    //((TMTracks) tblTracks.getModel()).loadList();
+                    tblTracks.setModel(new TMTracks());
                     int indexOf = player.getListSoundPaths().indexOf(player.getCurrent().getDataSource().getPath());
                     tblTracks.getSelectionModel().setSelectionInterval(0, indexOf);
-                    tblTracks.updateUI();
+                    //tblTracks.updateUI();
                 } else {
                     controller.start();
                 }
@@ -975,12 +901,268 @@ public class PlayerForm extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_tblTracksMouseClicked
 
+    private void optSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optSystemActionPerformed
+        changeLookAndFeel(UILookAndFeel.SYSTEM);
+    }//GEN-LAST:event_optSystemActionPerformed
+
+    private void optionMetalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionMetalActionPerformed
+        changeLookAndFeel(UILookAndFeel.METAL);
+    }//GEN-LAST:event_optionMetalActionPerformed
+
+    private void optionNimbusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionNimbusActionPerformed
+        changeLookAndFeel(UILookAndFeel.NIMBUS);
+    }//GEN-LAST:event_optionNimbusActionPerformed
+
+    private void optionGtkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionGtkActionPerformed
+        changeLookAndFeel(UILookAndFeel.GTK);
+    }//GEN-LAST:event_optionGtkActionPerformed
+
+//    private Object copy(Object obj) {
+//        try {
+//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//            ObjectOutputStream oos = new ObjectOutputStream(baos);
+//            oos.writeObject(obj);
+//            
+//            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+//            ObjectInputStream ois = new ObjectInputStream(bais);
+//            Object readObject = ois.readObject();
+//            ois.close();
+//            bais.close();
+//            oos.close();
+//            baos.close();
+//            return readObject;
+//        } catch (IOException ex) {
+//            Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (ClassNotFoundException ex) {
+//            Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        return null;
+//    }
+    
+    private void optMaterialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optMaterialActionPerformed
+        try {
+            PanelUI panelUi = panelMenu.getUI();
+            Border border = panelMenu.getBorder();
+            ButtonUI btnUi = ((JButton)panelMenu.getComponent(0)).getUI();
+            changeLookAndFeel(UILookAndFeel.MATERIAL);
+            UIManager.setLookAndFeel(new NimbusLookAndFeel());
+            SwingUtilities.updateComponentTreeUI(panelMenu);
+            panelMenu.setBackground(R.colors.PRIMARY_COLOR);
+            
+            Component[] components = panelMenu.getComponents();
+            Component comp;
+            
+            for (int i = 0; i < components.length; i++) {
+                comp = components[i];
+                if (comp instanceof JButton) {
+                    ((JButton) comp).setUI(btnUi);
+                    ((JButton) comp).updateUI();
+                    System.out.println("Changed");
+                }
+            }
+            panelMenu.setUI(panelUi);
+            panelMenu.setBorder(border);
+            panelMenu.updateUI();
+        } catch (UnsupportedLookAndFeelException ex) {
+            Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_optMaterialActionPerformed
+
+    private void optionDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionDefaultActionPerformed
+        changeLookAndFeel(UILookAndFeel.MAC);
+    }//GEN-LAST:event_optionDefaultActionPerformed
+
+    private void itemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemExitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_itemExitActionPerformed
+
+    private void panelContentMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelContentMouseClicked
+        hideMenu();
+    }//GEN-LAST:event_panelContentMouseClicked
+
+    private void panelContentMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelContentMouseMoved
+        //        int x = evt.getX();
+        //        if (x - evt.getComponent().getBounds().getMinX() < 21)
+        //            showMenu();
+        //        else
+        //            hideMenu();
+    }//GEN-LAST:event_panelContentMouseMoved
+
+    private void volSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volSliderStateChanged
+        if (controller.isAlive()) {
+            int vol = volSlider.getValue();
+            controller.getPlayer().setGain(vol);
+
+            boolean darkMode = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
+            int gain = (int) Session.getInstance().get(SessionKey.GAIN);
+            if (vol == 0)
+            btnMute.setIcon(R.icons(darkMode?"dark/mute.png": "mute.png"));
+            else {
+                btnMute.setIcon(R.icons(darkMode?"dark/volume.png": "volume.png"));
+                Session.getInstance().set(SessionKey.GAIN, vol);
+            }
+        }
+    }//GEN-LAST:event_volSliderStateChanged
+
+    private void barProgressMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_barProgressMouseClicked
+        if (evt.getButton() == MouseEvent.BUTTON1) {
+            Player player = controller.getPlayer();
+
+            Rectangle bounds = barProgress.getBounds();
+            int position = evt.getX();
+            double maxX = bounds.getMaxX();
+            double minX = bounds.getMinX();
+            int distance = (int) (maxX-minX);
+            long trackDuration = player.getCurrent().getDuration();
+            long goTo = (position*trackDuration) / distance;
+            try {
+                barProgress.setValue((int) goTo);
+                player.getCurrent().gotoSecond(goTo);
+
+            } catch (IOException | LineUnavailableException | UnsupportedAudioFileException ex) {
+                Logger.getLogger(PlayerForm.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }//GEN-LAST:event_barProgressMouseClicked
+
+    private void btnMuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuteActionPerformed
+        if (controller.isAlive()) {
+            Player player = controller.getPlayer();
+            if (player.isMute())
+            volSlider.setValue((int) Session.getInstance().get(SessionKey.GAIN));
+            else
+            volSlider.setValue(0);
+
+        }
+    }//GEN-LAST:event_btnMuteActionPerformed
+
+    private void btnSeekNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekNextActionPerformed
+        if (controller.isAlive())
+        controller.getPlayer().seekFolder(SeekOption.NEXT);
+    }//GEN-LAST:event_btnSeekNextActionPerformed
+
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        if (controller.isAlive())
+        controller.getPlayer().playNext();
+    }//GEN-LAST:event_btnNextActionPerformed
+
+    private void btnPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayActionPerformed
+        if (controller.isAlive()) {
+            boolean darkEnabled = (boolean) Session.getInstance().get(SessionKey.DARK_MODE);
+            Player player = controller.getPlayer();
+            if (player.isPlaying()) {
+                player.pause();
+                btnPlay.setIcon(darkEnabled?PLAYER_DARK_ICON:PLAYER_ICON);
+            }
+            else {
+                player.resumeTrack();
+                btnPlay.setIcon(darkEnabled?PAUSE_DARK_ICON:PAUSE_ICON);
+            }
+        }
+    }//GEN-LAST:event_btnPlayActionPerformed
+
+    private void btnSeekPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSeekPrevActionPerformed
+        if (controller.isAlive())
+        controller.getPlayer().playPrevious();
+    }//GEN-LAST:event_btnSeekPrevActionPerformed
+
+    private void btnPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrevActionPerformed
+        if (controller.isAlive())
+        controller.getPlayer().seekFolder(SeekOption.PREV);
+    }//GEN-LAST:event_btnPrevActionPerformed
+
+    private void lblCoverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCoverMouseClicked
+        hideMenu();
+    }//GEN-LAST:event_lblCoverMouseClicked
+
+    private void btnShowMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowMenuActionPerformed
+        showMenu();
+    }//GEN-LAST:event_btnShowMenuActionPerformed
+
+    private void optionMacActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_optionMacActionPerformed
+        changeLookAndFeel(UILookAndFeel.MAC);
+    }//GEN-LAST:event_optionMacActionPerformed
+
+    private void setUiOptionsChecked() {
+        setItemsChecked(itemChangeUi);
+    }
+    
+    private void setItemsChecked(JMenu menu) {
+        JMenuItem item;
+        
+        for (int i = 0; i < menu.getItemCount(); i++) {
+            item = menu.getItem(i);
+            if (item instanceof JRadioButtonMenuItem)
+                ((JRadioButtonMenuItem) item).setSelected(false);
+        }
+    }
+    
+    private void changeLookAndFeel(UILookAndFeel laf) {
+        setUiOptionsChecked();
+        switch (laf) {
+            case DEFAULT:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        McWinLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, true);
+                optionDefault.setSelected(true);
+                break;
+            case SYSTEM:
+                config.setProperty(UIConfig.KEYS.THEME, UIManager.getSystemLookAndFeelClassName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, false);
+                optSystem.setSelected(true);
+                break;
+            case METAL:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        MetalLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, false);
+                optionMetal.setSelected(true);
+                break;
+            case NIMBUS:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        NimbusLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, false);
+                optionNimbus.setSelected(true);
+                break;
+            case GTK:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        GTKLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, false);
+                optionGtk.setSelected(true);
+                break;
+            case MATERIAL:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        MaterialLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, false);
+                optMaterial.setSelected(true);
+                break;
+            case MAC:
+                config.setProperty(UIConfig.KEYS.THEME,
+                        McWinLookAndFeel.class.getName());
+                config.setProperty(UIConfig.KEYS.IS_MODERN_THEME, true);
+                optionDefault.setSelected(true);
+                break;
+        }
+        //SwingUtilities.updateComponentTreeUI(this);
+        JOptionPane.showMessageDialog(this,
+                "¡Tema Modificado! Los cambios tendrán efecto después de reiniciar",
+                "Tema Modificado",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
-        UIManager.setLookAndFeel(new MetalLookAndFeel());
+        UIConfig config = UIConfig.getInstance();
+        boolean isModern = Boolean.parseBoolean(config.getProperty(UIConfig.KEYS.IS_MODERN_THEME));
         
+        if (isModern)
+            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME), true);
+        else
+            setLookAndFeel(config.getProperty(UIConfig.KEYS.THEME));
+        
+        MemoryCleaner.startNow();
         java.awt.EventQueue.invokeLater(() -> {
             new PlayerForm().setVisible(true);
         });
@@ -998,12 +1180,13 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JPanel buttonsContainer;
     private javax.swing.JMenuItem itemAddFolder;
     private javax.swing.JMenuItem itemAddSongs;
+    private javax.swing.JMenu itemChangeUi;
     private javax.swing.JCheckBoxMenuItem itemDarkMode;
+    private javax.swing.JMenuItem itemExit;
     private javax.swing.JMenuItem itemOpenFile;
     private javax.swing.JMenuItem itemOpenFolder;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JLabel lblAlbum;
     private javax.swing.JLabel lblArtist;
@@ -1011,14 +1194,20 @@ public class PlayerForm extends javax.swing.JFrame {
     private javax.swing.JLabel lblDuration;
     private javax.swing.JLabel lblTitle;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JRadioButtonMenuItem optMaterial;
+    private javax.swing.JRadioButtonMenuItem optSystem;
+    private javax.swing.JRadioButtonMenuItem optionDefault;
+    private javax.swing.JRadioButtonMenuItem optionGtk;
+    private javax.swing.JRadioButtonMenuItem optionMac;
+    private javax.swing.JRadioButtonMenuItem optionMetal;
+    private javax.swing.JRadioButtonMenuItem optionNimbus;
     private javax.swing.JPanel panelButtons;
     private javax.swing.JPanel panelContent;
     private javax.swing.JPanel panelControls;
-    private javax.swing.JPanel panelListTracks;
+    private javax.swing.JScrollPane panelListTracks;
     private javax.swing.JPanel panelMenu;
     private javax.swing.JPanel panelTrackInfo;
     private javax.swing.JSplitPane splitMusic;
-    private javax.swing.JScrollPane tableScroll;
     private javax.swing.JTable tblTracks;
     private javax.swing.JPanel trackContainer;
     private javax.swing.JSlider volSlider;
@@ -1069,7 +1258,7 @@ public class PlayerForm extends javax.swing.JFrame {
     }
 
     public JScrollPane getjScrollPane1() {
-        return tableScroll;
+        return panelListTracks;
     }
 
     public JTable getjTable1() {
@@ -1104,10 +1293,6 @@ public class PlayerForm extends javax.swing.JFrame {
         return panelContent;
     }
 
-    public JPanel getPanelListTracks() {
-        return panelListTracks;
-    }
-
     public JPanel getPanelMenu() {
         return panelMenu;
     }
@@ -1127,6 +1312,6 @@ public class PlayerForm extends javax.swing.JFrame {
     public JTable getTblTracks() {
         return tblTracks;
     }
-    
-    
+
+
 }

@@ -39,4 +39,14 @@
     - Se cambia el color del fondo en el menu
     - Se corrige problema con boton de volumen
 
+# 0.8-Beta (Actual-No Subida)
+    - Se agrega opcion para cambiar lookandfeel (metal, nimbus, gtk y system)
+    - Se agrega soporte para Material LookAndFeel (beta)
+    - Se agrega soporte para Jtattoo LookAndFeels
+    - Se agregan transiciones a los botones de musica
+    - Se agrega opcion salir en el menu con atajo de teclado Cltr+Q
+    - Se agrega un archivo de configuracion en la carpeta de usuario segun sistema operativo
+    para almacenar variables como el modo oscuro y el tema por defecto, el cambio de tema de realiza
+    luego de reiniciar la aplicacion
+    - Estilo por defecto tipo Mac OSX
     

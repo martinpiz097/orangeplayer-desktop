@@ -6,7 +6,7 @@
 
     <groupId>org.orangeplayer</groupId>
     <artifactId>playerdesktop</artifactId>
-    <version>0.7-Beta</version>
+    <version>0.8-Beta</version>
 
     <name>OrangePlayer Desktop</name>
 
@@ -93,13 +93,13 @@
         </plugins>
     </build>
 
-    <!--<repositories>
+    <repositories>
         <repository>
             <id>clojars</id>
             <name>Clojars Repository</name>
             <url>https://clojars.org/repo</url>
         </repository>
-    </repositories>-->
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -122,6 +122,16 @@
             <groupId>org.swinglabs</groupId>
             <artifactId>swing-layout</artifactId>
             <version>1.0.3</version>
+        </dependency>
+        <dependency>
+             <groupId>org.mpizexternal</groupId>
+            <artifactId>material-ui-swing</artifactId>
+            <version>0.9.3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jtattoo</groupId>
+            <artifactId>JTattoo</artifactId>
+            <version>1.6.11</version>
         </dependency>
     </dependencies>
 
