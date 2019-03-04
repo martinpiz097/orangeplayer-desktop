@@ -20,8 +20,11 @@ public class SysInfo {
     public static final ImageIcon PAUSE_DARK_ICON = R.icons("dark/pause.png");
 
     public static final Dimension DISPLAY_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
+    public static final Dimension DEFAULT_ICON_SIZE = new Dimension(80, 80);
+    
 
-    public static final String DEFAULT_LOOK_AND_FEEL_CLASS = McWinLookAndFeel.class.getName();
+    //public static final String DEFAULT_LOOK_AND_FEEL_CLASS = McWinLookAndFeel.class.getName();
+    public static final String DEFAULT_LOOK_AND_FEEL_CLASS = UIManager.getSystemLookAndFeelClassName();
     
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String USER_NAME = System.getProperty("user.name");

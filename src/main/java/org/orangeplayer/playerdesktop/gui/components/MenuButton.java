@@ -7,13 +7,11 @@ package org.orangeplayer.playerdesktop.gui.components;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Insets;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import static javax.swing.SwingConstants.CENTER;
 import static javax.swing.SwingConstants.RIGHT;
-import javax.swing.border.LineBorder;
-import org.orangeplayer.playerdesktop.R;
 
 /**
  *
@@ -23,34 +21,45 @@ public class MenuButton extends JButton {
 
     public MenuButton() {
         super();
-        configButton();
+        defaultConfig();
+        configAligments();
     }
 
     public MenuButton(String text) {
         super(text);
-        configButton();
+        defaultConfig();
+        configAligments();
+    }
+    
+    public MenuButton(String text, JComponent parent) {
+        super(text);
+        defaultConfig();
+        configAligments();
+        setBackground(parent.getBackground());
     }
 
     public MenuButton(String text, Icon icon) {
         super(text, icon);
-        configButton();
+        defaultConfig();
+        configAligments();
     }
     
-    private void configButton() {
+    private void defaultConfig() {
         setFocusPainted(false);
         setBorderPainted(false);
         setRequestFocusEnabled(false);
-        setBorder(new LineBorder(Color.WHITE));
         setBackground(Color.WHITE);
         setForeground(Color.BLACK);
         setFont(new Font("Sans Serif", Font.BOLD, 14));
-        //setMargin(new Insets(0, 0, 0, 0));
         setAlignmentX(0);
         setAlignmentY(0);
-        setHorizontalAlignment(CENTER);
+        setHorizontalAlignment(LEADING);
         setVerticalAlignment(CENTER);
+        setVisible(true);
+    }
+    
+    protected void configAligments() {
         setHorizontalTextPosition(RIGHT);
         setVerticalTextPosition(CENTER);
-        setVisible(true);
     }
 }

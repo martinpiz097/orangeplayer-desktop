@@ -5,10 +5,12 @@
  */
 package org.orangeplayer.playerdesktop.sys;
 
+import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Image;
 import java.net.URL;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 /**
@@ -20,9 +22,25 @@ public class SysUtil {
         return getResizedIcon(img, 256, 256);
     }
     
+    public static ImageIcon getResizedIcon(ImageIcon img, JComponent parent) {
+        final Dimension parentSize = parent.getSize();
+        final int width = parentSize.width;
+        final int height = parentSize.height;
+        
+        if ((width == 0 || width == -1) || (height == 0 || height == -1))
+            return getResizedIcon(img, 64, 64);
+        else
+            return getResizedIcon(img, width, height);
+    }
+    
     public static ImageIcon getResizedIcon(ImageIcon img, int width, int height) {
         return new ImageIcon(img.getImage().getScaledInstance(width,
                 height, Image.SCALE_SMOOTH));
+    }
+    
+    public static ImageIcon getResizedIcon(ImageIcon img, Dimension dim) {
+        return new ImageIcon(img.getImage().getScaledInstance(dim.width,
+                dim.height, Image.SCALE_SMOOTH));
     }
     
     public static URL getResource(String path) {

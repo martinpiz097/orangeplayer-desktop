@@ -7,7 +7,7 @@ public class Session {
 
     private static Session session;
 
-    public static Session getInstance() {
+    public synchronized static Session getInstance() {
         if (session == null)
             session = new Session();
         return session;
@@ -27,6 +27,10 @@ public class Session {
 
     public Object get(SessionKey key) {
         return mapSession.get(key);
+    }
+    
+    public <T> T get(SessionKey key, Class<? extends T> clazz) {
+        return (T) mapSession.get(key);
     }
 
     public void set(SessionKey key, Object value) {

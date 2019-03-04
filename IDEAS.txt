@@ -1,0 +1,5 @@
+- crear reinicio
+- ver memorycleaner   
+- Guardar ultimas carpetas abiertas en las configuraciones
+- Color distintivo a cancion actual
+- Redimension de letra de acuerdo a - resolucion de pantalla con autoescalado en caso de ser modificada externamente

@@ -56,3 +56,7 @@
     - Se agrega label para indicar el valor del volumen actual
     - Tamaño de ventana se adapta a pantalla
     - Se mejora memoryCleaner
+
+# 1.0-Beta
+    - Se modifica interfaz por completo
+    - Faltan corregir errores graficos y detalles que dependen de muplayer
