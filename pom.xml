@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>org.orangeplayer</groupId>
-    <artifactId>playerdesktop</artifactId>
-    <version>1.0-Beta</version>
+    <artifactId>orangedesktop</artifactId>
+    <version>2.0</version>
+    <packaging>jar</packaging>
 
-    <name>OrangePlayer Desktop</name>
+    <name>OrangeDesktop</name>
 
-    <licenses>
-        <license>
-            <name>GNU General Public License v3.0</name>
-            <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
-        </license>
-    </licenses>
-
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+    
     <developers>
         <developer>
-            <name>Martín Pizarr Ascui</name>
+            <name>Martin Pizarro Ascui</name>
             <email>martinpiz097@gmail.com</email>
         </developer>
     </developers>
+    
+    <repositories>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars repository</name>
+            <url>https://clojars.org/repo</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.orangeplayer.playerdesktop.gui.PlayerForm</mainClass>
+                            <mainClass>org.orangeplayer.orangedesktop.gui.FormPlayer</mainClass>
                         </manifest>
                     </archive>
+                    <!--<includes>
+                        <include>**/service/*</include>
+                    </includes>-->
                 </configuration>
             </plugin>
 
+            <!--Con Dependencias dentro -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -59,7 +59,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <finalName>${name}</finalName>
+                    <finalName>${artifactId}-${version}</finalName>
                 </configuration>
             </plugin>
 
@@ -75,79 +75,29 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>org.orangeplayer.playerdesktop.gui.PlayerForm</mainClass>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>ideauidesigner-maven-plugin</artifactId>
-                <version>1.0-beta-1</version>
-
-                <configuration>
-                    <fork>true</fork>
-                    <debug>true</debug>
-                    <failOnError>true</failOnError>
+                    <mainClass>org.orangeplayer.orangedesktop.gui.FormPlayer</mainClass>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <repository>
-            <id>clojars</id>
-            <name>Clojars Repository</name>
-            <url>https://clojars.org/repo</url>
-        </repository>
-        <repository>
-            <id>unknown-jars-temp-repo</id>
-            <name>A temporary repository created by NetBeans for libraries and jars it could not identify. Please replace the dependencies in this repository with correct ones and delete this repository.</name>
-            <url>file:${project.basedir}/lib</url>
-        </repository>
-    </repositories>
-
+    
     <dependencies>
         <dependency>
             <groupId>org.orangeplayer</groupId>
             <artifactId>muplayer</artifactId>
-            <version>LATEST</version>
+            <version>1.5</version>
         </dependency>
-        <dependency>
-            <groupId>com.intellij</groupId>
-            <artifactId>forms_rt</artifactId>
-            <version>7.0.3</version>
+        
+        <!--
+         <dependency>
+            <groupId>fr.jcgay.send-notification</groupId>
+            <artifactId>send-notification</artifactId>
+            <version>0.15.0</version>
         </dependency>
-        <dependency>
-            <groupId>org</groupId>
-            <artifactId>jaudiotagger</artifactId>
-            <version>2.0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.swinglabs</groupId>
-            <artifactId>swing-layout</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-        <dependency>
-             <groupId>org.mpizexternal</groupId>
-            <artifactId>material-ui-swing</artifactId>
-            <version>0.9.3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jtattoo</groupId>
-            <artifactId>JTattoo</artifactId>
-            <version>1.6.11</version>
-        </dependency>
-        <dependency>
-            <groupId>unknown.binary</groupId>
-            <artifactId>AbsoluteLayout</artifactId>
-            <version>SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.clojars.martinpiz097</groupId>
-            <artifactId>muplayer</artifactId>
-            <version>1.2-TEST</version>
-            <type>jar</type>
-        </dependency>
+        
+        
+        -->
+        
     </dependencies>
-
+    
 </project>

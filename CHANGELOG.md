@@ -60,3 +60,12 @@
 # 1.0-Beta
     - Se modifica interfaz por completo
     - Faltan corregir errores graficos y detalles que dependen de muplayer
+
+# 1.1-Beta
+    - Corregido problema con volver de modo nocturno
+    - Se implementan notificaciones de escritorio
+    - Se define estilo unico mezclando lookandfeels
+
+# 2.0
+    - Reescritura completa de la app, se eliminan algunas funcionalidades para una 
+      posterior implementacion
