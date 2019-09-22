@@ -6,8 +6,6 @@
 package org.orangeplayer.orangedesktop.sys;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import org.muplayer.audio.model.TrackInfo;
 
@@ -16,9 +14,9 @@ import org.muplayer.audio.model.TrackInfo;
  * @author martin
  */
 public class TrackUtils {
-    public static LinkedList<Artist> getArtists(List<TrackInfo> listInfos) {
+    public static List<Artist> getArtists(List<TrackInfo> listInfos) {
         listInfos.sort((TrackInfo o1, TrackInfo o2) -> o1.getArtist().compareTo(o2.getArtist()));
-        LinkedList<Artist> listArtists = new LinkedList<>();
+        List<Artist> listArtists = new ArrayList<>();
         
         String currentArtist = null;
         byte[] coverData = null;

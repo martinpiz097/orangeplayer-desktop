@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
@@ -40,9 +41,20 @@ public class ImageUtil {
         return new ImageIcon(newImage);
     }
     
+    public static ImageIcon resizeIcon(ImageIcon src, Rectangle dim) {
+        Image newImage = src.getImage().getScaledInstance(
+                dim.width, dim.height, Image.SCALE_SMOOTH);
+        return new ImageIcon(newImage);
+    }
+    
     public static Rectangle getImageBounds(JLabel lblImg) {
         return getBufferedImage(((ImageIcon)lblImg.getIcon())
                 .getImage()).getData().getBounds();
     }
     
+    public static ImageIcon resizeIcon(byte[] imgBytes, JLabel lblImg) {
+        ImageIcon sourceIcon = new ImageIcon(imgBytes);
+        return resizeIcon(sourceIcon, lblImg.getBounds());
+    }
+
 }

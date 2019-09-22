@@ -6,12 +6,15 @@
 package org.orangeplayer.orangedesktop.gui;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +27,6 @@ import javax.swing.plaf.metal.MetalLookAndFeel;
 import org.muplayer.audio.Player;
 import org.muplayer.audio.Track;
 import org.muplayer.audio.interfaces.PlayerListener;
-import org.muplayer.audio.model.TrackInfo;
 import org.orangeplayer.orangedesktop.model.TCRSongs;
 import org.orangeplayer.orangedesktop.model.TMSongs;
 import org.orangeplayer.orangedesktop.sys.AppInfo;
@@ -35,6 +37,8 @@ import org.orangeplayer.orangedesktop.sys.ImageUtil;
 import org.orangeplayer.orangedesktop.sys.TrackUtils;
 
 import javax.swing.*;
+import org.orangelogger.sys.SystemUtil;
+import org.orangeplayer.orangedesktop.gui.util.BlurredImage;
 import org.orangeplayer.orangedesktop.scale.ScaleData;
 /**
  *
@@ -53,12 +57,13 @@ public class FormPlayer extends javax.swing.JFrame {
 
         tblSongs.setModel(new TMSongs(new ArrayList<>()));
         tblSongs.setDefaultRenderer(Object.class, new TCRSongs());
-        tblSongs.getTableHeader().setFont(new Font("Droid Sans", Font.BOLD, 24));
+        tblSongs.getTableHeader().setFont(new Font("Droid Sans", Font.BOLD, 18));
         //tblSongs.getTableHeader().setVisible(false);
         tblSongs.setRowHeight(64);
         tblSongs.setRowMargin(5);
         
         tblSongs.updateUI();
+        
     }
     
     private void setDefaultConfig() {
@@ -74,6 +79,7 @@ public class FormPlayer extends javax.swing.JFrame {
         objectManager.add(FormObject.PLAYER, player);
         
         menuBar.updateUI();
+
         
     }
     
@@ -117,16 +123,36 @@ public class FormPlayer extends javax.swing.JFrame {
 
         lblArtist.setText(artist == null ? "Artista Desconocido" : artist);
         lblAlbum.setText(album == null ? "Álbum Desconocido" : album);
-        Dimension dim = lblCover.getPreferredSize();
+        Dimension dim = new Dimension(512, 512);
         
         ImageIcon coverIcon = hasCover
                 ? ImageUtil.resizeIcon(new ImageIcon(track.getCoverData()), dim)
-                : new ImageIcon(getClass().getResource("/img/cover256.png"));
+                : ImageUtil.resizeIcon(new ImageIcon(getClass().getResource("/img/cover256.png")), dim);
         lblCover.setIcon(coverIcon);
+        BlurredImage.paint(lblCover, getClass().getResource("/img/cover256.png"));
+        lblCurrentCover.setIcon(coverIcon);
+        lblCurrentCover.updateUI();
+
         
         trackBar.setString("00:00");
         trackBar.setMaximum((int) track.getDuration());
         trackBar.setValue(0);
+
+        lblCurrentTitle.setText(track.getTitle());
+        lblCurrentArtist.setText(track.getArtist() == null ? "Artista Desconocido" : track.getArtist());
+        lblCurrentAlbum.setText(track.getAlbum() == null ? "Álbum Desconocido" : track.getAlbum());
+        
+    }
+    
+    private void configCurrentCover(Track current) {
+        if (current != null && current.hasCover()) {
+            lblCurrentCover.setIcon(ImageUtil.resizeIcon(current.getCoverData(), lblCurrentCover));
+        }
+        else {
+            URL resource = getClass().getResource("/img/cover256.png");
+            ImageIcon sourceIcon = new ImageIcon(resource);
+            lblCurrentCover.setIcon(ImageUtil.resizeIcon(sourceIcon, lblCurrentCover.getBounds()));
+        }
     }
     
     private void configPlayer() {
@@ -162,18 +188,18 @@ public class FormPlayer extends javax.swing.JFrame {
             public void onStarted() {
                 btnPlay.setIcon(new ImageIcon(getClass().getResource("/img/pause.png")));
                 tblSongs.setModel(new TMSongs());
-                LinkedList<Artist> artists = TrackUtils.getArtists(player.getTracksInfo());
-                System.out.println("ArtistCount: "+artists.size());
+                List<Artist> artists = TrackUtils.getArtists(player.getTracksInfo());
+
+                Track current = player.getCurrent();
+                configCurrentCover(current);
                 
-                AtomicInteger counter = new AtomicInteger(0);
-                artists.stream()
-                        .forEach(artist-> {
-                            panelListArtists.add(new PanelArtist(artist));
-                            if (counter.incrementAndGet() >= 5 && counter.get() % 5 == 0) {
-                                panelListArtists.updateUI();
-                            }
-                            
-                        });
+                for (int i = 0; i < artists.size(); i++) {
+                    panelListArtists.add(new PanelArtist(artists.get(i)));
+                    if (i >= 4 && i % 4 == 0) {
+                        panelListArtists.updateUI();
+                    }
+                }
+                
                 panelListArtists.updateUI();
                 
             }
@@ -219,6 +245,13 @@ public class FormPlayer extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        formPlaying = new javax.swing.JFrame();
+        panelPlayer = new javax.swing.JPanel();
+        lblCover = new javax.swing.JLabel();
+        panelData = new javax.swing.JPanel();
+        lblTitle = new javax.swing.JLabel();
+        lblArtist = new javax.swing.JLabel();
+        lblAlbum = new javax.swing.JLabel();
         panelHeader = new javax.swing.JPanel();
         btnPrev = new javax.swing.JButton();
         btnPlay = new javax.swing.JButton();
@@ -226,14 +259,16 @@ public class FormPlayer extends javax.swing.JFrame {
         btnOpen = new javax.swing.JButton();
         btnMute = new javax.swing.JButton();
         trackBar = new javax.swing.JProgressBar();
+        btnPlayer = new javax.swing.JButton();
         panelContainer = new javax.swing.JPanel();
         tabbed = new javax.swing.JTabbedPane();
-        panelPlayer = new javax.swing.JPanel();
-        lblCover = new javax.swing.JLabel();
-        lblArtist = new javax.swing.JLabel();
-        lblTitle = new javax.swing.JLabel();
-        lblAlbum = new javax.swing.JLabel();
-        panelSongs = new javax.swing.JPanel();
+        panelCurrent = new javax.swing.JPanel();
+        panelCurrentTrack = new javax.swing.JPanel();
+        lblCurrentCover = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        lblCurrentTitle = new javax.swing.JLabel();
+        lblCurrentAlbum = new javax.swing.JLabel();
+        lblCurrentArtist = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblSongs = new javax.swing.JTable();
         panelArtists = new javax.swing.JPanel();
@@ -248,13 +283,65 @@ public class FormPlayer extends javax.swing.JFrame {
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
 
+        panelPlayer.setBackground(new java.awt.Color(255, 255, 255));
+
+        lblCover.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCover.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/cover256.png"))); // NOI18N
+
+        panelData.setBackground(new java.awt.Color(255, 255, 255));
+        panelData.setLayout(new java.awt.GridLayout(3, 1));
+
+        lblTitle.setBackground(new java.awt.Color(255, 255, 255));
+        lblTitle.setFont(new java.awt.Font("Droid Sans", 1, 24)); // NOI18N
+        lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTitle.setText("Titulo");
+        panelData.add(lblTitle);
+
+        lblArtist.setBackground(new java.awt.Color(255, 255, 255));
+        lblArtist.setFont(new java.awt.Font("Droid Sans", 1, 18)); // NOI18N
+        lblArtist.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblArtist.setText("Artista");
+        panelData.add(lblArtist);
+
+        lblAlbum.setBackground(new java.awt.Color(255, 255, 255));
+        lblAlbum.setFont(new java.awt.Font("Droid Sans", 1, 14)); // NOI18N
+        lblAlbum.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblAlbum.setText("Album");
+        panelData.add(lblAlbum);
+
+        javax.swing.GroupLayout panelPlayerLayout = new javax.swing.GroupLayout(panelPlayer);
+        panelPlayer.setLayout(panelPlayerLayout);
+        panelPlayerLayout.setHorizontalGroup(
+            panelPlayerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelPlayerLayout.createSequentialGroup()
+                .addComponent(lblCover, javax.swing.GroupLayout.PREFERRED_SIZE, 735, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelData, javax.swing.GroupLayout.PREFERRED_SIZE, 618, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        panelPlayerLayout.setVerticalGroup(
+            panelPlayerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(lblCover, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPlayerLayout.createSequentialGroup()
+                .addContainerGap(233, Short.MAX_VALUE)
+                .addComponent(panelData, javax.swing.GroupLayout.PREFERRED_SIZE, 263, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(196, 196, 196))
+        );
+
+        formPlaying.getContentPane().add(panelPlayer, java.awt.BorderLayout.CENTER);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(255, 61, 0));
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                formComponentResized(evt);
+            }
+        });
 
-        panelHeader.setBackground(new java.awt.Color(255, 61, 0));
+        panelHeader.setBackground(new java.awt.Color(255, 102, 51));
         panelHeader.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        btnPrev.setBackground(new java.awt.Color(255, 61, 0));
+        btnPrev.setBackground(new java.awt.Color(255, 102, 51));
         btnPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/prev.png"))); // NOI18N
         btnPrev.setFocusable(false);
         btnPrev.addActionListener(new java.awt.event.ActionListener() {
@@ -263,7 +350,7 @@ public class FormPlayer extends javax.swing.JFrame {
             }
         });
 
-        btnPlay.setBackground(new java.awt.Color(255, 61, 0));
+        btnPlay.setBackground(new java.awt.Color(255, 102, 51));
         btnPlay.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/play.png"))); // NOI18N
         btnPlay.setFocusable(false);
         btnPlay.addActionListener(new java.awt.event.ActionListener() {
@@ -272,7 +359,7 @@ public class FormPlayer extends javax.swing.JFrame {
             }
         });
 
-        btnNext.setBackground(new java.awt.Color(255, 61, 0));
+        btnNext.setBackground(new java.awt.Color(255, 102, 51));
         btnNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/next.png"))); // NOI18N
         btnNext.setFocusable(false);
         btnNext.addActionListener(new java.awt.event.ActionListener() {
@@ -281,7 +368,7 @@ public class FormPlayer extends javax.swing.JFrame {
             }
         });
 
-        btnOpen.setBackground(new java.awt.Color(255, 61, 0));
+        btnOpen.setBackground(new java.awt.Color(255, 102, 51));
         btnOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/open-music.png"))); // NOI18N
         btnOpen.setFocusable(false);
         btnOpen.addActionListener(new java.awt.event.ActionListener() {
@@ -290,7 +377,7 @@ public class FormPlayer extends javax.swing.JFrame {
             }
         });
 
-        btnMute.setBackground(new java.awt.Color(255, 61, 0));
+        btnMute.setBackground(new java.awt.Color(255, 102, 51));
         btnMute.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/unmute.png"))); // NOI18N
         btnMute.setFocusable(false);
         btnMute.addActionListener(new java.awt.event.ActionListener() {
@@ -312,18 +399,29 @@ public class FormPlayer extends javax.swing.JFrame {
             }
         });
 
+        btnPlayer.setBackground(new java.awt.Color(255, 102, 51));
+        btnPlayer.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/arrow_bottom.png"))); // NOI18N
+        btnPlayer.setFocusable(false);
+        btnPlayer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPlayerActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelHeaderLayout = new javax.swing.GroupLayout(panelHeader);
         panelHeader.setLayout(panelHeaderLayout);
         panelHeaderLayout.setHorizontalGroup(
             panelHeaderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelHeaderLayout.createSequentialGroup()
                 .addContainerGap()
+                .addComponent(btnPlayer, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnPlay, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(trackBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnMute, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -344,67 +442,55 @@ public class FormPlayer extends javax.swing.JFrame {
                             .addComponent(btnMute)
                             .addComponent(btnOpen)
                             .addComponent(trackBar, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(btnPlayer, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
         panelContainer.setBackground(new java.awt.Color(255, 255, 255));
-        panelContainer.setLayout(new java.awt.BorderLayout());
 
-        tabbed.setBackground(new java.awt.Color(255, 61, 0));
+        tabbed.setBackground(new java.awt.Color(255, 255, 255));
         tabbed.setForeground(new java.awt.Color(0, 0, 0));
         tabbed.setTabPlacement(javax.swing.JTabbedPane.LEFT);
         tabbed.setFocusable(false);
-        tabbed.setFont(new java.awt.Font("Droid Sans", 1, 24)); // NOI18N
+        tabbed.setFont(new java.awt.Font("Droid Sans", 1, 18)); // NOI18N
         tabbed.setOpaque(true);
 
-        panelPlayer.setBackground(new java.awt.Color(255, 255, 255));
+        panelCurrent.setBackground(new java.awt.Color(255, 255, 255));
+        panelCurrent.setLayout(new java.awt.BorderLayout());
 
-        lblCover.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblCover.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/cover256.png"))); // NOI18N
+        panelCurrentTrack.setBackground(new java.awt.Color(255, 255, 255));
+        panelCurrentTrack.setLayout(new java.awt.BorderLayout());
 
-        lblArtist.setFont(new java.awt.Font("Droid Sans", 1, 18)); // NOI18N
-        lblArtist.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblArtist.setText("Artista");
+        lblCurrentCover.setBackground(new java.awt.Color(255, 255, 255));
+        lblCurrentCover.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCurrentCover.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        panelCurrentTrack.add(lblCurrentCover, java.awt.BorderLayout.CENTER);
 
-        lblTitle.setFont(new java.awt.Font("Droid Sans", 1, 24)); // NOI18N
-        lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblTitle.setText("Titulo");
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jPanel1.setLayout(new java.awt.GridLayout(3, 0));
 
-        lblAlbum.setFont(new java.awt.Font("Droid Sans", 1, 14)); // NOI18N
-        lblAlbum.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblAlbum.setText("Album");
+        lblCurrentTitle.setFont(new java.awt.Font("SansSerif", 1, 20)); // NOI18N
+        lblCurrentTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCurrentTitle.setText("[Nada en Reproduccion]");
+        jPanel1.add(lblCurrentTitle);
 
-        javax.swing.GroupLayout panelPlayerLayout = new javax.swing.GroupLayout(panelPlayer);
-        panelPlayer.setLayout(panelPlayerLayout);
-        panelPlayerLayout.setHorizontalGroup(
-            panelPlayerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelPlayerLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelPlayerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblAlbum, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(lblArtist, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(lblTitle, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
-                    .addComponent(lblCover, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        panelPlayerLayout.setVerticalGroup(
-            panelPlayerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelPlayerLayout.createSequentialGroup()
-                .addComponent(lblCover, javax.swing.GroupLayout.DEFAULT_SIZE, 395, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(lblTitle)
-                .addGap(18, 18, 18)
-                .addComponent(lblArtist, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(lblAlbum, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(10, 10, 10))
-        );
+        lblCurrentAlbum.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        lblCurrentAlbum.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCurrentAlbum.setText("[Nada en Reproduccion]");
+        jPanel1.add(lblCurrentAlbum);
 
-        tabbed.addTab("Reproducción", panelPlayer);
+        lblCurrentArtist.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
+        lblCurrentArtist.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCurrentArtist.setText("[Nada en Reproduccion]");
+        jPanel1.add(lblCurrentArtist);
 
-        panelSongs.setBackground(new java.awt.Color(255, 255, 255));
+        panelCurrentTrack.add(jPanel1, java.awt.BorderLayout.SOUTH);
 
+        panelCurrent.add(panelCurrentTrack, java.awt.BorderLayout.CENTER);
+
+        jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
         jScrollPane1.setOpaque(false);
 
         tblSongs.setFont(new java.awt.Font("Droid Sans", 0, 14)); // NOI18N
@@ -440,18 +526,9 @@ public class FormPlayer extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tblSongs);
 
-        javax.swing.GroupLayout panelSongsLayout = new javax.swing.GroupLayout(panelSongs);
-        panelSongs.setLayout(panelSongsLayout);
-        panelSongsLayout.setHorizontalGroup(
-            panelSongsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 774, Short.MAX_VALUE)
-        );
-        panelSongsLayout.setVerticalGroup(
-            panelSongsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
-        );
+        panelCurrent.add(jScrollPane1, java.awt.BorderLayout.EAST);
 
-        tabbed.addTab("Canciones", panelSongs);
+        tabbed.addTab("Reproducción", panelCurrent);
 
         panelArtists.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -466,16 +543,25 @@ public class FormPlayer extends javax.swing.JFrame {
         panelArtists.setLayout(panelArtistsLayout);
         panelArtistsLayout.setHorizontalGroup(
             panelArtistsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(scrollArtists, javax.swing.GroupLayout.DEFAULT_SIZE, 774, Short.MAX_VALUE)
+            .addComponent(scrollArtists, javax.swing.GroupLayout.DEFAULT_SIZE, 1235, Short.MAX_VALUE)
         );
         panelArtistsLayout.setVerticalGroup(
             panelArtistsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(scrollArtists, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
+            .addComponent(scrollArtists, javax.swing.GroupLayout.DEFAULT_SIZE, 595, Short.MAX_VALUE)
         );
 
         tabbed.addTab("Artistas", panelArtists);
 
-        panelContainer.add(tabbed, java.awt.BorderLayout.CENTER);
+        javax.swing.GroupLayout panelContainerLayout = new javax.swing.GroupLayout(panelContainer);
+        panelContainer.setLayout(panelContainerLayout);
+        panelContainerLayout.setHorizontalGroup(
+            panelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(tabbed)
+        );
+        panelContainerLayout.setVerticalGroup(
+            panelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(tabbed)
+        );
 
         menuBar.setBackground(new java.awt.Color(0, 0, 0));
         menuBar.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -531,7 +617,7 @@ public class FormPlayer extends javax.swing.JFrame {
         jMenuItem2.setBackground(new java.awt.Color(0, 0, 0));
         jMenuItem2.setFont(new java.awt.Font("Droid Sans", 1, 16)); // NOI18N
         jMenuItem2.setForeground(new java.awt.Color(255, 255, 255));
-        jMenuItem2.setText("Claro");
+        jMenuItem2.setText("Oscuro");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -613,15 +699,48 @@ public class FormPlayer extends javax.swing.JFrame {
     }//GEN-LAST:event_itemExitActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        tabbed.setBackground(AppInfo.PRIMARY_COLOR);
-        tabbed.setForeground(Color.BLACK);
-        tabbed.updateUI();
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
-
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         tabbed.setBackground(Color.WHITE);
         tabbed.setForeground(Color.BLACK);
         tabbed.updateUI();
+        
+        panelContainer.setBackground(Color.WHITE);
+        panelContainer.setForeground(Color.BLACK);
+        panelContainer.updateUI();
+        
+        panelCurrent.setBackground(Color.WHITE);
+        panelCurrent.setForeground(Color.BLACK);
+        panelCurrent.updateUI();
+        
+        panelArtists.setBackground(Color.WHITE);
+        panelArtists.setForeground(Color.BLACK);
+        panelArtists.updateUI();
+        
+        tblSongs.setBackground(Color.WHITE);
+        tblSongs.setForeground(Color.BLACK);
+        tblSongs.updateUI();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        tabbed.setBackground(Color.decode("#242424"));
+        tabbed.setForeground(Color.WHITE);
+        tabbed.updateUI();
+        
+        panelContainer.setBackground(Color.decode("#242424"));
+        panelContainer.setForeground(Color.WHITE);
+        panelContainer.updateUI();
+        
+        panelCurrent.setBackground(Color.decode("#242424"));
+        panelCurrent.setForeground(Color.WHITE);
+        panelCurrent.updateUI();
+        
+        panelArtists.setBackground(Color.decode("#242424"));
+        panelArtists.setForeground(Color.WHITE);
+        panelArtists.updateUI();
+        
+        tblSongs.setBackground(Color.decode("#242424"));
+        tblSongs.setForeground(Color.WHITE);
+        tblSongs.updateUI();
+        
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void btnMuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuteActionPerformed
@@ -648,6 +767,20 @@ public class FormPlayer extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_trackBarMouseReleased
 
+    private void btnPlayerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayerActionPerformed
+        if (player.isAlive()) {
+            formPlaying.setSize(formPlaying.getPreferredSize());
+            formPlaying.setLocationRelativeTo(null);
+            //setVisible(false);
+            formPlaying.setVisible(true);
+        }
+    }//GEN-LAST:event_btnPlayerActionPerformed
+
+    private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
+        configCurrentCover(player.getCurrent());
+        System.out.println("Windows Resized");
+    }//GEN-LAST:event_formComponentResized
+
     /**
      * @param args the command line arguments
      */
@@ -663,7 +796,9 @@ public class FormPlayer extends javax.swing.JFrame {
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnOpen;
     private javax.swing.JButton btnPlay;
+    private javax.swing.JButton btnPlayer;
     private javax.swing.JButton btnPrev;
+    private javax.swing.JFrame formPlaying;
     private javax.swing.JMenuItem itemExit;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
@@ -671,18 +806,25 @@ public class FormPlayer extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblAlbum;
     private javax.swing.JLabel lblArtist;
     private javax.swing.JLabel lblCover;
+    private javax.swing.JLabel lblCurrentAlbum;
+    private javax.swing.JLabel lblCurrentArtist;
+    private javax.swing.JLabel lblCurrentCover;
+    private javax.swing.JLabel lblCurrentTitle;
     private javax.swing.JLabel lblTitle;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JPanel panelArtists;
     private javax.swing.JPanel panelContainer;
+    private javax.swing.JPanel panelCurrent;
+    private javax.swing.JPanel panelCurrentTrack;
+    private javax.swing.JPanel panelData;
     private javax.swing.JPanel panelHeader;
     private javax.swing.JPanel panelListArtists;
     private javax.swing.JPanel panelPlayer;
-    private javax.swing.JPanel panelSongs;
     private javax.swing.JScrollPane scrollArtists;
     private javax.swing.JTabbedPane tabbed;
     private javax.swing.JTable tblSongs;

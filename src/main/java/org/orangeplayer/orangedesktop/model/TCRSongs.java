@@ -12,7 +12,6 @@ import java.awt.Font;
 import java.net.URL;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.border.MatteBorder;
 import javax.swing.table.TableCellRenderer;
 import org.muplayer.audio.model.TrackInfo;
 import org.orangeplayer.orangedesktop.sys.AppInfo;

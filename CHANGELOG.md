@@ -69,3 +69,6 @@
 # 2.0
     - Reescritura completa de la app, se eliminan algunas funcionalidades para una 
       posterior implementacion
+
+# 2.1-Beta
+    - Se agregan algunas funciones, falta por mejorar

@@ -5,7 +5,6 @@
  */
 package org.orangeplayer.orangedesktop.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import org.orangeplayer.orangedesktop.sys.Artist;
 import javax.swing.*;
@@ -65,7 +64,7 @@ public class PanelArtist extends javax.swing.JPanel {
         lblCover.setOpaque(true);
 
         lblTitle.setBackground(new java.awt.Color(255, 255, 255));
-        lblTitle.setFont(new java.awt.Font("Droid Sans", 1, 12)); // NOI18N
+        lblTitle.setFont(new java.awt.Font("Droid Sans", 1, 14)); // NOI18N
         lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblTitle.setOpaque(true);
 
